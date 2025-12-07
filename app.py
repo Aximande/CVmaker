@@ -1295,7 +1295,7 @@ def render_lettre_motivation():
     )
     
     # =========================================================================
-    # CONTEXTES PRÉ-DÉFINIS SÉLECTIONNABLES
+    # CONTEXTES PRÉ-DÉFINIS + PERSONNALISÉS
     # =========================================================================
     st.markdown("---")
     st.markdown("""
@@ -1309,6 +1309,24 @@ def render_lettre_motivation():
     </div>
     """, unsafe_allow_html=True)
     
+    # Charger les contextes personnalisés depuis Supabase
+    supabase = get_supabase_client()
+    custom_contextes = {}
+    if supabase.enabled:
+        custom_contextes_list = supabase.get_custom_contextes()
+        for ctx in custom_contextes_list:
+            custom_contextes[ctx['cle']] = {
+                'id': ctx['id'],
+                'label': f"✏️ {ctx['label']}",
+                'categorie': ctx['categorie'],
+                'texte': ctx['texte'],
+                'mots_cles': ctx.get('mots_cles', []),
+                'is_custom': True
+            }
+    
+    # Fusionner les contextes par défaut et personnalisés
+    all_contextes = {**CONTEXTES_LETTRE_MOTIVATION, **custom_contextes}
+    
     # Déterminer les contextes recommandés si une offre est présente
     contextes_recommandes = []
     if offre_text and len(offre_text.strip()) > 50:
@@ -1319,9 +1337,16 @@ def render_lettre_motivation():
     if 'lettre_contextes_selectionnes' not in st.session_state:
         st.session_state.lettre_contextes_selectionnes = contextes_recommandes if contextes_recommandes else []
     
-    # Afficher les contextes par catégorie
-    categories = get_contextes_par_categorie()
+    # Organiser les contextes par catégorie (incluant les personnalisés)
+    categories = {}
+    for key, ctx in all_contextes.items():
+        cat = ctx.get("categorie", "Autre")
+        if cat not in categories:
+            categories[cat] = []
+        categories[cat].append((key, ctx))
+    
     selected_contextes = []
+    selected_custom_ids = []  # Pour gérer la suppression
     
     # Créer les colonnes pour les catégories
     col_left, col_right = st.columns(2)
@@ -1333,14 +1358,27 @@ def render_lettre_motivation():
                 for key, ctx in cat_contextes:
                     is_recommended = key in contextes_recommandes
                     default_value = is_recommended or key in st.session_state.lettre_contextes_selectionnes
+                    is_custom = ctx.get('is_custom', False)
                     
                     # Ajouter une icône ✨ si recommandé
                     label = ctx["label"]
                     if is_recommended:
                         label = f"{label} ✨"
                     
-                    if st.checkbox(label, value=default_value, key=f"ctx_{key}"):
-                        selected_contextes.append(key)
+                    # Layout pour contextes personnalisés (avec bouton suppression)
+                    if is_custom:
+                        ctx_col1, ctx_col2 = st.columns([5, 1])
+                        with ctx_col1:
+                            if st.checkbox(label, value=default_value, key=f"ctx_{key}"):
+                                selected_contextes.append(key)
+                        with ctx_col2:
+                            if st.button("🗑️", key=f"del_{key}", help="Supprimer ce contexte"):
+                                if supabase.delete_custom_contexte(ctx['id']):
+                                    st.success("Contexte supprimé !")
+                                    st.rerun()
+                    else:
+                        if st.checkbox(label, value=default_value, key=f"ctx_{key}"):
+                            selected_contextes.append(key)
     
     # Mettre à jour la session
     st.session_state.lettre_contextes_selectionnes = selected_contextes
@@ -1349,11 +1387,62 @@ def render_lettre_motivation():
     if selected_contextes:
         st.markdown(f"**{len(selected_contextes)} contexte(s) sélectionné(s)** pour enrichir ta lettre")
     
-    # Contexte SUPPLÉMENTAIRE libre
+    # =========================================================================
+    # AJOUTER UN NOUVEAU CONTEXTE PERSONNALISÉ
+    # =========================================================================
+    with st.expander("➕ Ajouter un nouveau contexte personnalisé", expanded=False):
+        st.markdown("""
+        <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">
+            Crée un nouveau contexte qui sera sauvegardé et réutilisable pour toutes tes lettres.
+        </div>
+        """, unsafe_allow_html=True)
+        
+        new_ctx_col1, new_ctx_col2 = st.columns(2)
+        with new_ctx_col1:
+            new_label = st.text_input("Titre du contexte", placeholder="Ex: Mon expérience associative", key="new_ctx_label")
+        with new_ctx_col2:
+            new_categorie = st.selectbox(
+                "Catégorie",
+                options=["Parcours", "Sport & Valeurs", "Valeurs", "Pratique", "Spécifique", "Autre"],
+                key="new_ctx_cat"
+            )
+        
+        new_texte = st.text_area(
+            "Contenu du contexte",
+            placeholder="Décris en quelques phrases ce que tu veux mettre en avant...",
+            height=100,
+            key="new_ctx_texte"
+        )
+        
+        if st.button("💾 Sauvegarder ce contexte", type="primary"):
+            if new_label and new_texte:
+                if supabase.enabled:
+                    # Générer une clé unique
+                    import re
+                    cle = re.sub(r'[^a-z0-9_]', '_', new_label.lower().replace(' ', '_'))[:30]
+                    cle = f"custom_{cle}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    
+                    result = supabase.save_custom_contexte(
+                        cle=cle,
+                        label=new_label,
+                        categorie=new_categorie,
+                        texte=new_texte
+                    )
+                    if result:
+                        st.success(f"✅ Contexte '{new_label}' sauvegardé !")
+                        st.rerun()
+                    else:
+                        st.error("Erreur lors de la sauvegarde")
+                else:
+                    st.warning("⚠️ Supabase non configuré. Les contextes personnalisés ne seront pas persistés.")
+            else:
+                st.warning("Merci de remplir le titre et le contenu")
+    
+    # Contexte SUPPLÉMENTAIRE libre (pour usage ponctuel)
     st.markdown("---")
-    st.markdown("### ➕ Contexte supplémentaire (optionnel)")
+    st.markdown("### 📝 Contexte ponctuel (non sauvegardé)")
     contexte_libre = st.text_area(
-        "Ajoute des éléments spécifiques non listés ci-dessus",
+        "Ajoute des éléments spécifiques pour CETTE lettre uniquement",
         placeholder="Ex: Tu connais quelqu'un dans l'entreprise, tu as visité leurs locaux, tu as une motivation très spécifique pour CE poste...",
         height=80,
         key="lettre_contexte_libre"
@@ -1384,8 +1473,15 @@ def render_lettre_motivation():
             with st.spinner("🤖 Rédaction de la lettre en cours..."):
                 llm = get_llm()
                 
-                # Compiler les contextes sélectionnés
-                contexte_compile = get_contexte_texte(selected_contextes)
+                # Compiler les contextes sélectionnés (défaut + personnalisés)
+                textes_contextes = []
+                for key in selected_contextes:
+                    if key in CONTEXTES_LETTRE_MOTIVATION:
+                        textes_contextes.append(CONTEXTES_LETTRE_MOTIVATION[key]["texte"])
+                    elif key in custom_contextes:
+                        textes_contextes.append(custom_contextes[key]["texte"])
+                
+                contexte_compile = "\n\n".join(textes_contextes)
                 
                 # Construire le contexte complet
                 contexte_prompt = f"""
@@ -1417,7 +1513,7 @@ INSTRUCTIONS IMPORTANTES :
                 result = llm.generate(
                     prompt=prompt,
                     system_prompt=SYSTEM_PROMPT_LETTRE,
-                    max_tokens=4096
+                    max_tokens=8096
                 )
                 
                 st.session_state.lettre_motivation = result
@@ -1807,15 +1903,73 @@ def render_cv_personnalise():
             
             st.markdown("---")
             
+            # === AJUSTEMENT DENSITÉ POUR PDF 1 PAGE ===
+            st.markdown("### 📐 Ajuster la densité (pour tenir sur 1 page)")
+            
+            from utils.cv_generator import get_density_recommendation, render_template, get_density_values
+            
+            # Obtenir la recommandation automatique
+            cv_data = st.session_state.cv_current_data
+            if cv_data:
+                preset_name, recommended_density, explanation = get_density_recommendation(cv_data)
+                
+                # Afficher l'explication
+                st.markdown(f"""
+                <div style="background: rgba(251, 191, 36, 0.15); border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.9rem;">
+                    {explanation}
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Initialiser la densité dans session_state
+                if 'cv_density' not in st.session_state:
+                    st.session_state.cv_density = recommended_density
+                
+                # Slider de densité
+                density = st.slider(
+                    "Densité du CV",
+                    min_value=0,
+                    max_value=100,
+                    value=st.session_state.cv_density,
+                    help="0 = Ultra compact (tout petit), 100 = Espacé (grand)",
+                    key="density_slider"
+                )
+                
+                # Labels sous le slider
+                col_labels = st.columns(4)
+                with col_labels[0]:
+                    st.caption("🔴 Ultra compact")
+                with col_labels[1]:
+                    st.caption("🟠 Compact")
+                with col_labels[2]:
+                    st.caption("🟢 Normal")
+                with col_labels[3]:
+                    st.caption("🔵 Espacé")
+                
+                # Bouton pour appliquer la nouvelle densité
+                if density != st.session_state.cv_density:
+                    if st.button("🔄 Appliquer la nouvelle densité", type="secondary", use_container_width=True):
+                        st.session_state.cv_density = density
+                        # Régénérer le HTML avec la nouvelle densité
+                        new_html = render_template(cv_data, density=density)
+                        st.session_state.cv_html_preview = new_html
+                        st.success("✅ Densité mise à jour !")
+                        st.rerun()
+            
+            st.markdown("---")
+            
             # === TÉLÉCHARGEMENT ===
             st.markdown("### 📥 Télécharger")
+            
+            # Utiliser la densité actuelle pour générer les fichiers
+            current_density = st.session_state.get('cv_density', 50)
+            html_for_download = st.session_state.cv_html_preview
             
             dl_col1, dl_col2 = st.columns(2)
             
             with dl_col1:
                 st.download_button(
                     "📄 Télécharger HTML",
-                    data=st.session_state.cv_html_preview,
+                    data=html_for_download,
                     file_name=f"CV_Valerie_v{st.session_state.cv_version}_{datetime.now().strftime('%Y%m%d')}.html",
                     mime="text/html",
                     use_container_width=True
@@ -1829,7 +1983,7 @@ def render_cv_personnalise():
                     import io
                     
                     pdf_buffer = io.BytesIO()
-                    HTML(string=st.session_state.cv_html_preview).write_pdf(pdf_buffer)
+                    HTML(string=html_for_download).write_pdf(pdf_buffer)
                     pdf_buffer.seek(0)
                     
                     st.download_button(
@@ -2120,7 +2274,7 @@ def generate_initial_cv(offre_text: str):
     """Génère la première version du CV adapté."""
     try:
         import json
-        from utils.cv_generator import VALERIE_DATA_BASE, render_template
+        from utils.cv_generator import VALERIE_DATA_BASE, render_template, get_density_recommendation
         
         llm = get_llm()
         
@@ -2152,7 +2306,12 @@ def generate_initial_cv(offre_text: str):
             autres = [c for c in VALERIE_DATA_BASE["competences"] if c not in prioritaires]
             cv_data["competences"] = prioritaires[:5] + autres[:5]
         
-        html = render_template(cv_data)
+        # Calculer la densité recommandée automatiquement
+        preset_name, recommended_density, _ = get_density_recommendation(cv_data)
+        st.session_state.cv_density = recommended_density
+        
+        # Générer le HTML avec la densité appropriée
+        html = render_template(cv_data, density=recommended_density)
         
         # Sauvegarder dans session state
         st.session_state.cv_html_preview = html
@@ -2226,8 +2385,9 @@ def apply_cv_feedback(feedback: str):
         if "interets" in new_data:
             cv_data["interets"] = new_data["interets"]
         
-        # Générer le HTML
-        html = render_template(cv_data)
+        # Générer le HTML avec la densité actuelle
+        current_density = st.session_state.get('cv_density', 50)
+        html = render_template(cv_data, density=current_density)
         
         # Incrémenter la version
         st.session_state.cv_version = st.session_state.get('cv_version', 1) + 1
@@ -2297,8 +2457,9 @@ def apply_full_manual_edits(
         cv_data["benevolat"] = benevolat if benevolat else cv_data.get('benevolat', [])
         cv_data["interets"] = interets if interets else cv_data.get('interets', [])
         
-        # Générer le HTML
-        html = render_template(cv_data)
+        # Générer le HTML avec la densité actuelle
+        current_density = st.session_state.get('cv_density', 50)
+        html = render_template(cv_data, density=current_density)
         
         # Mettre à jour les customizations
         current_cust = st.session_state.cv_customizations or {}

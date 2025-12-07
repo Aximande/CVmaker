@@ -682,6 +682,107 @@ class SupabaseClient:
             return []
     
     # =========================================================================
+    # CONTEXTES PERSONNALISÉS (pour Lettre de motivation)
+    # =========================================================================
+    
+    def save_custom_contexte(
+        self,
+        cle: str,
+        label: str,
+        categorie: str,
+        texte: str,
+        mots_cles: List[str] = None
+    ) -> Optional[Dict]:
+        """Sauvegarde un nouveau contexte personnalisé."""
+        if not self.enabled:
+            return None
+        
+        try:
+            data = {
+                "cle": cle,
+                "label": label,
+                "categorie": categorie,
+                "texte": texte,
+                "mots_cles": mots_cles or [],
+                "is_default": False,  # Les contextes par défaut sont dans le code
+                "created_at": datetime.now().isoformat()
+            }
+            
+            result = self.client.table("custom_contextes").insert(data).execute()
+            return result.data[0] if result.data else None
+            
+        except Exception as e:
+            print(f"Erreur sauvegarde contexte: {e}")
+            return None
+    
+    def get_custom_contextes(self) -> List[Dict]:
+        """Récupère tous les contextes personnalisés."""
+        if not self.enabled:
+            return []
+        
+        try:
+            result = self.client.table("custom_contextes") \
+                .select("*") \
+                .order("created_at", desc=True) \
+                .execute()
+            
+            return result.data or []
+            
+        except Exception as e:
+            print(f"Erreur récupération contextes: {e}")
+            return []
+    
+    def delete_custom_contexte(self, contexte_id: str) -> bool:
+        """Supprime un contexte personnalisé."""
+        if not self.enabled:
+            return False
+        
+        try:
+            self.client.table("custom_contextes") \
+                .delete() \
+                .eq("id", contexte_id) \
+                .execute()
+            return True
+            
+        except Exception as e:
+            print(f"Erreur suppression contexte: {e}")
+            return False
+    
+    def update_custom_contexte(
+        self,
+        contexte_id: str,
+        label: str = None,
+        texte: str = None,
+        categorie: str = None,
+        mots_cles: List[str] = None
+    ) -> bool:
+        """Met à jour un contexte personnalisé."""
+        if not self.enabled:
+            return False
+        
+        try:
+            updates = {}
+            if label is not None:
+                updates["label"] = label
+            if texte is not None:
+                updates["texte"] = texte
+            if categorie is not None:
+                updates["categorie"] = categorie
+            if mots_cles is not None:
+                updates["mots_cles"] = mots_cles
+            
+            if updates:
+                self.client.table("custom_contextes") \
+                    .update(updates) \
+                    .eq("id", contexte_id) \
+                    .execute()
+            return True
+            
+        except Exception as e:
+            print(f"Erreur mise à jour contexte: {e}")
+            return False
+    
+    # =========================================================================
     # STATISTIQUES
     # =========================================================================
     

@@ -731,22 +731,22 @@ def render_accueil():
     with col1:
         st.markdown("""
         <div class="feature-card">
-            <h3>🔍 Analyser une offre</h3>
-            <p>Colle une offre d'emploi et obtiens une analyse détaillée avec score de compatibilité</p>
+            <h3>🎨 CV Personnalisé</h3>
+            <p>Génère un CV adapté à chaque offre avec template pro + chat itératif</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("Commencer l'analyse", key="btn_analyse"):
-            st.session_state.current_page = 'analyser'
+        if st.button("Créer mon CV", key="btn_cv_perso"):
+            st.session_state.current_page = 'cv_perso'
             st.rerun()
         
         st.markdown("""
         <div class="feature-card">
-            <h3>📄 Adapter mon CV</h3>
-            <p>Génère une version de ton CV optimisée pour une offre spécifique</p>
+            <h3>✉️ Lettre de motivation</h3>
+            <p>Crée une lettre percutante et personnalisée pour chaque candidature</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("Optimiser mon CV", key="btn_cv"):
-            st.session_state.current_page = 'cv'
+        if st.button("Rédiger ma lettre", key="btn_lettre"):
+            st.session_state.current_page = 'lettre'
             st.rerun()
         
         st.markdown("""
@@ -762,16 +762,6 @@ def render_accueil():
     with col2:
         st.markdown("""
         <div class="feature-card">
-            <h3>✉️ Lettre de motivation</h3>
-            <p>Crée une lettre percutante et personnalisée pour chaque candidature</p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Rédiger ma lettre", key="btn_lettre"):
-            st.session_state.current_page = 'lettre'
-            st.rerun()
-        
-        st.markdown("""
-        <div class="feature-card">
             <h3>🎤 Préparer un entretien</h3>
             <p>Anticipe les questions et prépare des réponses percutantes</p>
         </div>
@@ -782,11 +772,21 @@ def render_accueil():
         
         st.markdown("""
         <div class="feature-card">
-            <h3>📚 Mes candidatures</h3>
-            <p>Retrouve l'historique de tous les documents générés</p>
+            <h3>💼 Posts LinkedIn</h3>
+            <p>Génère des posts LinkedIn dans ton style pour booster ta visibilité</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("Voir l'historique", key="btn_historique"):
+        if st.button("Créer un post", key="btn_linkedin"):
+            st.session_state.current_page = 'linkedin'
+            st.rerun()
+        
+        st.markdown("""
+        <div class="feature-card">
+            <h3>📚 Mes candidatures</h3>
+            <p>Suivi complet de tes candidatures avec rappels et statistiques</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Voir mes candidatures", key="btn_historique"):
             st.session_state.current_page = 'historique'
             st.rerun()
     
@@ -799,7 +799,7 @@ def render_accueil():
     atouts = [
         ("🏆", "Ironman Finisher", "Résilience exceptionnelle"),
         ("🥇", "JO Paris 2024", "Leadership prouvé"),
-        ("🎓", "Titre CIP 2024", "Formation à jour"),
+        ("🎓", "Titre CIP 2025", "Formation récente"),
         ("💼", "25+ ans expérience", "Expertise relationnelle"),
         ("🤝", "6 stages diversifiés", "Connaissance du terrain"),
         ("🏃", "Projet socio-sport", "Engagement social")

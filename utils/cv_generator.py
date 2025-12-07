@@ -20,7 +20,9 @@ VALERIE_DATA_BASE = {
     "titre_professionnel": "Conseillère en Insertion Professionnelle",
     "email": "valerie.jasica67@gmail.com",
     "telephone": "06 09 91 41 86",
-    "linkedin": "Valerie_Jasica",
+    "telephone_link": "+33609914186",
+    "linkedin": "Valérie Jasica",
+    "linkedin_url": "https://www.linkedin.com/in/valeriejasica/",
     "localisation": "COULLONS 45720",
     
     # Zone personnalisable selon l'offre

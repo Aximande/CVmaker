@@ -140,14 +140,21 @@ def render_template(data: Dict) -> str:
             comp_html += f'<div class="competence-item">{c}</div>\n'
         html = re.sub(r'\{\{#competences\}\}.*?\{\{/competences\}\}', comp_html, html, flags=re.DOTALL)
     
-    # Compétences communication
+    # Compétences communication (section optionnelle)
     if data.get("section_communication") and "competences_com" in data:
+        # Générer le HTML des compétences com
         comp_com_html = ""
         for c in data["competences_com"]:
             comp_com_html += f'<div class="competence-item">{c}</div>\n'
+        
+        # Remplacer les compétences dans la section
         html = re.sub(r'\{\{#competences_com\}\}.*?\{\{/competences_com\}\}', comp_com_html, html, flags=re.DOTALL)
+        
+        # Supprimer les balises de section (garder le contenu)
+        html = html.replace('{{#section_communication}}', '')
+        html = html.replace('{{/section_communication}}', '')
     else:
-        # Supprimer la section communication si pas activée
+        # Supprimer toute la section communication si pas activée
         html = re.sub(r'\{\{#section_communication\}\}.*?\{\{/section_communication\}\}', '', html, flags=re.DOTALL)
     
     # Expériences

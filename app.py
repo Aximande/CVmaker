@@ -1856,85 +1856,209 @@ def render_cv_personnalise():
                 st.markdown("""
                 <div style="background: rgba(251, 191, 36, 0.15); border-radius: 8px; padding: 12px; margin-bottom: 15px; border-left: 3px solid #fbbf24;">
                     <strong>✏️ Mode édition manuelle</strong><br/>
-                    <span style="font-size: 0.85rem;">Modifie directement le contenu ci-dessous, puis clique sur "Appliquer" pour mettre à jour le CV.</span>
+                    <span style="font-size: 0.85rem;">Modifie TOUT le CV ci-dessous, puis clique sur "Appliquer" pour régénérer.</span>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.session_state.get('cv_customizations'):
-                    cust = st.session_state.cv_customizations
+                if st.session_state.get('cv_current_data'):
+                    cv_data = st.session_state.cv_current_data
+                    cust = st.session_state.cv_customizations or {}
                     
-                    # === ÉDITION DE L'ACCROCHE ===
-                    st.markdown("**📝 Accroche** (tu peux utiliser `**mot**` pour mettre en gras)")
+                    # Sous-onglets pour chaque section
+                    edit_tabs = st.tabs(["📝 Accroche", "💪 Compétences", "💼 Expériences", "🎓 Formation", "📋 Stages", "🤝 Bénévolat", "🎯 Intérêts"])
                     
-                    # Nettoyer l'accroche pour l'édition
-                    accroche_edit = cust.get('accroche', '')
-                    accroche_edit = accroche_edit.replace("<span class='accroche-highlight'>", "**").replace("</span>", "**")
-                    
-                    new_accroche = st.text_area(
-                        "Accroche",
-                        value=accroche_edit,
-                        height=100,
-                        key="edit_accroche",
-                        label_visibility="collapsed"
-                    )
-                    
-                    st.markdown("---")
-                    
-                    # === ÉDITION DES QUALITÉS ===
-                    st.markdown("**✨ Qualités** (4 maximum)")
-                    
-                    qualites_actuelles = cust.get('qualites', ['Déterminée', 'Engagée', 'Résiliente', 'Fédératrice'])
-                    
-                    # Liste de qualités disponibles
-                    qualites_dispo = [
-                        "Déterminée", "Engagée", "Résiliente", "Fédératrice", 
-                        "Polyvalente", "Organisée", "Proactive", "Empathique",
-                        "Dynamique", "Rigoureuse", "Adaptable", "Créative",
-                        "Autonome", "Collaborative", "Persévérante", "Bienveillante"
-                    ]
-                    
-                    new_qualites = st.multiselect(
-                        "Sélectionne 4 qualités",
-                        options=qualites_dispo,
-                        default=qualites_actuelles[:4],
-                        max_selections=4,
-                        key="edit_qualites",
-                        label_visibility="collapsed"
-                    )
-                    
-                    # Option pour ajouter une qualité personnalisée
-                    qualite_custom = st.text_input("Ou ajoute une qualité personnalisée", key="edit_qualite_custom", placeholder="Ex: Innovante")
-                    if qualite_custom and len(new_qualites) < 4:
-                        new_qualites.append(qualite_custom)
-                    
-                    st.markdown("---")
-                    
-                    # === ÉDITION DES COMPÉTENCES ===
-                    st.markdown("**💪 Compétences prioritaires** (5 maximum)")
-                    
-                    competences_actuelles = cust.get('competences_prioritaires', [])
-                    
-                    # Afficher chaque compétence comme un input éditable
-                    new_competences = []
-                    for i in range(5):
-                        default_val = competences_actuelles[i] if i < len(competences_actuelles) else ""
-                        comp = st.text_input(
-                            f"Compétence {i+1}",
-                            value=default_val,
-                            key=f"edit_comp_{i}",
-                            placeholder=f"Compétence {i+1}..."
+                    # === ONGLET ACCROCHE & QUALITÉS ===
+                    with edit_tabs[0]:
+                        st.markdown("**📝 Accroche** (utilise `**mot**` pour mettre en gras)")
+                        
+                        accroche_edit = cust.get('accroche', cv_data.get('accroche', ''))
+                        accroche_edit = accroche_edit.replace("<span class='accroche-highlight'>", "**").replace("</span>", "**")
+                        
+                        new_accroche = st.text_area(
+                            "Accroche",
+                            value=accroche_edit,
+                            height=100,
+                            key="edit_accroche",
+                            label_visibility="collapsed"
                         )
-                        if comp:
-                            new_competences.append(comp)
+                        
+                        st.markdown("**✨ Qualités** (4 max)")
+                        qualites_actuelles = cv_data.get('qualites', ['Déterminée', 'Engagée', 'Résiliente', 'Fédératrice'])
+                        
+                        qualites_dispo = [
+                            "Déterminée", "Engagée", "Résiliente", "Fédératrice", 
+                            "Polyvalente", "Organisée", "Proactive", "Empathique",
+                            "Dynamique", "Rigoureuse", "Adaptable", "Créative",
+                            "Autonome", "Collaborative", "Persévérante", "Bienveillante"
+                        ]
+                        
+                        new_qualites = st.multiselect(
+                            "Qualités",
+                            options=qualites_dispo + [q for q in qualites_actuelles if q not in qualites_dispo],
+                            default=qualites_actuelles[:4],
+                            max_selections=4,
+                            key="edit_qualites",
+                            label_visibility="collapsed"
+                        )
+                        
+                        qualite_custom = st.text_input("+ Qualité personnalisée", key="edit_qualite_custom")
+                        if qualite_custom and len(new_qualites) < 4:
+                            new_qualites.append(qualite_custom)
+                    
+                    # === ONGLET COMPÉTENCES ===
+                    with edit_tabs[1]:
+                        st.markdown("**💪 Compétences principales** (affichées en premier)")
+                        
+                        competences_actuelles = cv_data.get('competences', [])
+                        
+                        new_competences = []
+                        for i, comp in enumerate(competences_actuelles[:10]):
+                            new_comp = st.text_input(
+                                f"Compétence {i+1}",
+                                value=comp,
+                                key=f"edit_comp_{i}"
+                            )
+                            if new_comp:
+                                new_competences.append(new_comp)
+                        
+                        # Ajouter une nouvelle compétence
+                        new_comp_add = st.text_input("➕ Ajouter une compétence", key="edit_comp_new", placeholder="Nouvelle compétence...")
+                        if new_comp_add:
+                            new_competences.append(new_comp_add)
+                    
+                    # === ONGLET EXPÉRIENCES ===
+                    with edit_tabs[2]:
+                        st.markdown("**💼 Expériences professionnelles**")
+                        
+                        experiences = cv_data.get('experiences', [])
+                        new_experiences = []
+                        
+                        for i, exp in enumerate(experiences):
+                            with st.expander(f"{exp.get('entreprise', 'Expérience')} - {exp.get('poste', '')}", expanded=i==0):
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    entreprise = st.text_input("Entreprise", value=exp.get('entreprise', ''), key=f"edit_exp_ent_{i}")
+                                    poste = st.text_input("Poste", value=exp.get('poste', ''), key=f"edit_exp_poste_{i}")
+                                with col2:
+                                    dates = st.text_input("Dates", value=exp.get('dates', ''), key=f"edit_exp_dates_{i}")
+                                    supprimer = st.checkbox("🗑️ Supprimer", key=f"edit_exp_del_{i}")
+                                
+                                if not supprimer and entreprise:
+                                    new_experiences.append({
+                                        'entreprise': entreprise,
+                                        'poste': poste,
+                                        'dates': dates
+                                    })
+                        
+                        # Ajouter une expérience
+                        with st.expander("➕ Ajouter une expérience"):
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                new_ent = st.text_input("Entreprise", key="edit_exp_new_ent")
+                                new_poste = st.text_input("Poste", key="edit_exp_new_poste")
+                            with col2:
+                                new_dates = st.text_input("Dates", key="edit_exp_new_dates")
+                            if new_ent and new_poste:
+                                new_experiences.insert(0, {'entreprise': new_ent, 'poste': new_poste, 'dates': new_dates})
+                    
+                    # === ONGLET FORMATIONS ===
+                    with edit_tabs[3]:
+                        st.markdown("**🎓 Formations**")
+                        
+                        formations = cv_data.get('formations', [])
+                        new_formations = []
+                        
+                        for i, form in enumerate(formations):
+                            col1, col2, col3 = st.columns([2, 2, 1])
+                            with col1:
+                                titre = st.text_input("Diplôme", value=form.get('titre', ''), key=f"edit_form_titre_{i}")
+                            with col2:
+                                etab = st.text_input("Établissement", value=form.get('etablissement', ''), key=f"edit_form_etab_{i}")
+                            with col3:
+                                dates = st.text_input("Année", value=form.get('dates', ''), key=f"edit_form_dates_{i}")
+                            
+                            if titre:
+                                new_formations.append({'titre': titre, 'etablissement': etab, 'dates': dates})
+                    
+                    # === ONGLET STAGES ===
+                    with edit_tabs[4]:
+                        st.markdown("**📋 Stages CIP**")
+                        
+                        stages = cv_data.get('stages', [])
+                        new_stages = []
+                        
+                        for i, stage in enumerate(stages):
+                            col1, col2, col3 = st.columns([2, 2, 1])
+                            with col1:
+                                lieu = st.text_input("Lieu", value=stage.get('lieu', ''), key=f"edit_stage_lieu_{i}")
+                            with col2:
+                                mission = st.text_input("Mission", value=stage.get('mission', ''), key=f"edit_stage_mission_{i}")
+                            with col3:
+                                dates = st.text_input("Dates", value=stage.get('dates', ''), key=f"edit_stage_dates_{i}")
+                            
+                            if lieu:
+                                new_stages.append({'lieu': lieu, 'mission': mission, 'dates': dates})
+                    
+                    # === ONGLET BÉNÉVOLAT ===
+                    with edit_tabs[5]:
+                        st.markdown("**🤝 Missions de bénévolat**")
+                        
+                        benevolat = cv_data.get('benevolat', [])
+                        new_benevolat = []
+                        
+                        for i, ben in enumerate(benevolat):
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                event = st.text_input("Événement", value=ben.get('evenement', ''), key=f"edit_ben_event_{i}")
+                            with col2:
+                                role = st.text_input("Rôle", value=ben.get('role', ''), key=f"edit_ben_role_{i}")
+                            
+                            if event:
+                                new_benevolat.append({'evenement': event, 'role': role})
+                        
+                        # Ajouter
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            new_event = st.text_input("➕ Nouvel événement", key="edit_ben_new_event")
+                        with col2:
+                            new_role = st.text_input("Rôle", key="edit_ben_new_role")
+                        if new_event:
+                            new_benevolat.append({'evenement': new_event, 'role': new_role})
+                    
+                    # === ONGLET INTÉRÊTS ===
+                    with edit_tabs[6]:
+                        st.markdown("**🎯 Centres d'intérêt**")
+                        
+                        interets = cv_data.get('interets', [])
+                        new_interets = []
+                        
+                        for i, inter in enumerate(interets):
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                titre = st.text_input("Intérêt", value=inter.get('titre', ''), key=f"edit_int_titre_{i}")
+                            with col2:
+                                detail = st.text_input("Détail", value=inter.get('detail', ''), key=f"edit_int_detail_{i}")
+                            
+                            if titre:
+                                new_interets.append({'titre': titre, 'detail': detail})
                     
                     st.markdown("---")
                     
-                    # === BOUTON APPLIQUER ===
-                    if st.button("✅ Appliquer mes modifications", type="primary", use_container_width=True):
-                        apply_manual_edits(new_accroche, new_qualites, new_competences)
+                    # === BOUTON APPLIQUER TOUTES LES MODIFICATIONS ===
+                    if st.button("✅ Appliquer toutes mes modifications", type="primary", use_container_width=True):
+                        apply_full_manual_edits(
+                            accroche=new_accroche,
+                            qualites=new_qualites,
+                            competences=new_competences,
+                            experiences=new_experiences,
+                            formations=new_formations,
+                            stages=new_stages,
+                            benevolat=new_benevolat,
+                            interets=new_interets
+                        )
                         st.rerun()
                     
-                    st.caption("💡 Tes modifications manuelles seront appliquées au CV et ajoutées à l'historique.")
+                    st.caption("💡 Toutes tes modifications seront appliquées au CV et ajoutées à l'historique.")
                 
                 else:
                     st.info("Génère d'abord un CV pour pouvoir l'éditer manuellement.")
@@ -2085,39 +2209,49 @@ RÉPONDS UNIQUEMENT AVEC UN JSON VALIDE:
         st.error(f"❌ Erreur: {str(e)}")
 
 
-def apply_manual_edits(accroche: str, qualites: list, competences: list):
-    """Applique les modifications manuelles de l'utilisateur au CV."""
+def apply_full_manual_edits(
+    accroche: str,
+    qualites: list,
+    competences: list,
+    experiences: list,
+    formations: list,
+    stages: list,
+    benevolat: list,
+    interets: list
+):
+    """Applique TOUTES les modifications manuelles de l'utilisateur au CV."""
     try:
         from utils.cv_generator import VALERIE_DATA_BASE, render_template
         
         # Convertir l'accroche (remplacer **mot** par les spans HTML)
         accroche_html = accroche
-        # Remplacer **texte** par <span class='accroche-highlight'>texte</span>
-        import re
         accroche_html = re.sub(r'\*\*(.+?)\*\*', r"<span class='accroche-highlight'>\1</span>", accroche_html)
+        
+        # Construire le nouveau cv_data complet
+        cv_data = VALERIE_DATA_BASE.copy()
+        
+        # Appliquer toutes les modifications
+        cv_data["accroche"] = accroche_html
+        cv_data["qualites"] = qualites[:4] if qualites else cv_data.get('qualites', [])
+        cv_data["competences"] = competences if competences else cv_data.get('competences', [])
+        cv_data["experiences"] = experiences if experiences else cv_data.get('experiences', [])
+        cv_data["formations"] = formations if formations else cv_data.get('formations', [])
+        cv_data["stages"] = stages if stages else cv_data.get('stages', [])
+        cv_data["benevolat"] = benevolat if benevolat else cv_data.get('benevolat', [])
+        cv_data["interets"] = interets if interets else cv_data.get('interets', [])
+        
+        # Générer le HTML
+        html = render_template(cv_data)
         
         # Mettre à jour les customizations
         current_cust = st.session_state.cv_customizations or {}
-        
         new_customizations = {
             **current_cust,
             'accroche': accroche_html,
-            'qualites': qualites[:4] if qualites else current_cust.get('qualites', []),
-            'competences_prioritaires': competences[:5] if competences else current_cust.get('competences_prioritaires', []),
-            'modification_appliquee': 'Modifications manuelles appliquées'
+            'qualites': qualites[:4],
+            'competences_prioritaires': competences[:5] if competences else [],
+            'modification_appliquee': 'Édition manuelle complète'
         }
-        
-        # Appliquer les personnalisations au template
-        cv_data = VALERIE_DATA_BASE.copy()
-        cv_data["accroche"] = new_customizations["accroche"]
-        cv_data["qualites"] = new_customizations["qualites"]
-        
-        # Compétences : prioritaires + autres
-        prioritaires = new_customizations["competences_prioritaires"]
-        autres = [c for c in VALERIE_DATA_BASE["competences"] if c not in prioritaires]
-        cv_data["competences"] = prioritaires + autres[:5]
-        
-        html = render_template(cv_data)
         
         # Incrémenter la version
         st.session_state.cv_version = st.session_state.get('cv_version', 1) + 1
@@ -2126,10 +2260,21 @@ def apply_manual_edits(accroche: str, qualites: list, competences: list):
         if 'cv_modifications_history' not in st.session_state:
             st.session_state.cv_modifications_history = []
         
+        # Compter les sections modifiées
+        sections_modifiees = []
+        if accroche: sections_modifiees.append("accroche")
+        if qualites: sections_modifiees.append("qualités")
+        if competences: sections_modifiees.append("compétences")
+        if experiences: sections_modifiees.append("expériences")
+        if formations: sections_modifiees.append("formations")
+        if stages: sections_modifiees.append("stages")
+        if benevolat: sections_modifiees.append("bénévolat")
+        if interets: sections_modifiees.append("intérêts")
+        
         st.session_state.cv_modifications_history.append({
             'version': st.session_state.cv_version,
-            'demande': '✏️ Édition manuelle',
-            'resultat': 'Accroche, qualités et compétences modifiées manuellement'
+            'demande': '✏️ Édition manuelle complète',
+            'resultat': f"Sections modifiées: {', '.join(sections_modifiees)}"
         })
         
         # Mettre à jour le session state
@@ -2137,7 +2282,7 @@ def apply_manual_edits(accroche: str, qualites: list, competences: list):
         st.session_state.cv_customizations = new_customizations
         st.session_state.cv_current_data = cv_data
         
-        st.success("✅ Modifications manuelles appliquées !")
+        st.success("✅ Toutes les modifications ont été appliquées !")
         
     except Exception as e:
         st.error(f"❌ Erreur: {str(e)}")

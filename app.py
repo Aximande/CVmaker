@@ -660,7 +660,6 @@ def render_sidebar():
         
         pages = {
             'accueil': ('🏠', 'Accueil'),
-            'express': ('🚀', 'Génération Express'),
             'cv_perso': ('🎨', 'CV Personnalisé'),
             'lettre': ('✉️', 'Lettre de motivation'),
             'entretien': ('🎤', 'Préparer un entretien'),
@@ -699,33 +698,6 @@ def render_accueil():
         Chaque candidature est une nouvelle ligne de départ. 🏊‍♀️🚴‍♀️🏃‍♀️"
     </div>
     """, unsafe_allow_html=True)
-    
-    # Bouton Génération Express mis en avant
-    st.markdown("---")
-    st.markdown("### ⚡ Le plus rapide")
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
-                    border: 2px solid rgba(16, 185, 129, 0.5);
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    text-align: center;
-                    margin: 1rem 0;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🚀</div>
-            <h3 style="color: #34d399; margin: 0;">Génération Express</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; margin: 0.5rem 0;">
-                1 offre → CV + Lettre + Prep entretien<br/>
-                <strong>Tout en 1 clic !</strong>
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("🚀 Lancer la génération express", type="primary", use_container_width=True, key="btn_express_home"):
-            st.session_state.current_page = 'express'
-            st.rerun()
-    
-    st.markdown("---")
     
     # Fonctionnalités principales en grille
     st.markdown("### 🚀 Que veux-tu faire aujourd'hui ?")
@@ -2807,7 +2779,6 @@ def render_historique():
         **🔄 Synchronisation automatique :**
         
         Toutes tes candidatures sont automatiquement synchronisées ici quand tu :
-        - ✅ Sauvegardes après une **Génération Express**
         - ✅ Sauvegardes un **CV Personnalisé** (avec option de liaison)
         - ✅ Sauvegardes une **Lettre de motivation** ou **Préparation entretien**
         
@@ -3138,7 +3109,6 @@ def main():
     # Router vers la bonne page
     pages = {
         'accueil': render_accueil,
-        'express': render_express,
         'cv_perso': render_cv_personnalise,
         'lettre': render_lettre_motivation,
         'entretien': render_preparation_entretien,

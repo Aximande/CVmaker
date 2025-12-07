@@ -727,34 +727,6 @@ def render_accueil():
     
     st.markdown("---")
     
-    # Outils complémentaires
-    st.markdown("### 💡 Outils complémentaires")
-    col_a, col_b = st.columns(2)
-    
-    with col_a:
-        st.markdown("""
-        <div class="feature-card" style="border-left: 4px solid #8b5cf6;">
-            <h3>💼 Posts LinkedIn</h3>
-            <p>Génère des posts dans ton style pour booster ta visibilité professionnelle</p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Créer un post LinkedIn", key="btn_linkedin_home"):
-            st.session_state.current_page = 'linkedin'
-            st.rerun()
-    
-    with col_b:
-        st.markdown("""
-        <div class="feature-card" style="border-left: 4px solid #10b981;">
-            <h3>📚 Suivi des Candidatures</h3>
-            <p>Dashboard complet avec statistiques, rappels et historique de toutes tes candidatures</p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Voir mon dashboard", key="btn_dashboard_home"):
-            st.session_state.current_page = 'historique'
-            st.rerun()
-    
-    st.markdown("---")
-    
     # Fonctionnalités principales en grille
     st.markdown("### 🚀 Que veux-tu faire aujourd'hui ?")
     

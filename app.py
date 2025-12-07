@@ -1816,38 +1816,128 @@ def render_cv_personnalise():
                         create_candidature=lier_candidature
                     )
         
-        # === COLONNE DROITE: PREVIEW ===
+        # === COLONNE DROITE: PREVIEW + ÉDITION MANUELLE ===
         with col_right:
             st.markdown("### 📄 Aperçu du CV")
             
-            # Afficher les personnalisations actuelles de façon claire
-            if st.session_state.get('cv_customizations'):
-                cust = st.session_state.cv_customizations
-                
-                with st.expander("🔍 Voir les personnalisations appliquées", expanded=True):
-                    st.markdown("**📝 Accroche personnalisée:**")
-                    accroche = cust.get('accroche', 'Non définie')
-                    # Nettoyer les tags HTML pour l'affichage
-                    accroche_clean = accroche.replace("<span class='accroche-highlight'>", "**").replace("</span>", "**")
-                    st.markdown(f"> {accroche_clean}")
-                    
-                    col_q, col_c = st.columns(2)
-                    with col_q:
-                        st.markdown("**✨ Qualités:**")
-                        for q in cust.get('qualites', []):
-                            st.markdown(f"• {q}")
-                    
-                    with col_c:
-                        st.markdown("**💪 Compétences clés:**")
-                        for c in cust.get('competences_prioritaires', [])[:5]:
-                            st.markdown(f"• {c}")
+            # Onglets: Aperçu / Édition manuelle
+            tab_preview, tab_edit = st.tabs(["👁️ Aperçu", "✏️ Édition manuelle"])
             
-            # Preview HTML du CV
-            if st.session_state.get('cv_html_preview'):
-                import streamlit.components.v1 as components
-                components.html(st.session_state.cv_html_preview, height=750, scrolling=True)
-            else:
-                st.warning("Erreur: Aucun aperçu disponible")
+            with tab_preview:
+                # Afficher les personnalisations actuelles de façon claire
+                if st.session_state.get('cv_customizations'):
+                    cust = st.session_state.cv_customizations
+                    
+                    with st.expander("🔍 Personnalisations actuelles", expanded=False):
+                        st.markdown("**📝 Accroche:**")
+                        accroche = cust.get('accroche', 'Non définie')
+                        accroche_clean = accroche.replace("<span class='accroche-highlight'>", "**").replace("</span>", "**")
+                        st.markdown(f"> {accroche_clean}")
+                        
+                        col_q, col_c = st.columns(2)
+                        with col_q:
+                            st.markdown("**✨ Qualités:**")
+                            for q in cust.get('qualites', []):
+                                st.markdown(f"• {q}")
+                        
+                        with col_c:
+                            st.markdown("**💪 Compétences:**")
+                            for c in cust.get('competences_prioritaires', [])[:5]:
+                                st.markdown(f"• {c}")
+                
+                # Preview HTML du CV
+                if st.session_state.get('cv_html_preview'):
+                    import streamlit.components.v1 as components
+                    components.html(st.session_state.cv_html_preview, height=700, scrolling=True)
+                else:
+                    st.warning("Erreur: Aucun aperçu disponible")
+            
+            with tab_edit:
+                st.markdown("""
+                <div style="background: rgba(251, 191, 36, 0.15); border-radius: 8px; padding: 12px; margin-bottom: 15px; border-left: 3px solid #fbbf24;">
+                    <strong>✏️ Mode édition manuelle</strong><br/>
+                    <span style="font-size: 0.85rem;">Modifie directement le contenu ci-dessous, puis clique sur "Appliquer" pour mettre à jour le CV.</span>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.session_state.get('cv_customizations'):
+                    cust = st.session_state.cv_customizations
+                    
+                    # === ÉDITION DE L'ACCROCHE ===
+                    st.markdown("**📝 Accroche** (tu peux utiliser `**mot**` pour mettre en gras)")
+                    
+                    # Nettoyer l'accroche pour l'édition
+                    accroche_edit = cust.get('accroche', '')
+                    accroche_edit = accroche_edit.replace("<span class='accroche-highlight'>", "**").replace("</span>", "**")
+                    
+                    new_accroche = st.text_area(
+                        "Accroche",
+                        value=accroche_edit,
+                        height=100,
+                        key="edit_accroche",
+                        label_visibility="collapsed"
+                    )
+                    
+                    st.markdown("---")
+                    
+                    # === ÉDITION DES QUALITÉS ===
+                    st.markdown("**✨ Qualités** (4 maximum)")
+                    
+                    qualites_actuelles = cust.get('qualites', ['Déterminée', 'Engagée', 'Résiliente', 'Fédératrice'])
+                    
+                    # Liste de qualités disponibles
+                    qualites_dispo = [
+                        "Déterminée", "Engagée", "Résiliente", "Fédératrice", 
+                        "Polyvalente", "Organisée", "Proactive", "Empathique",
+                        "Dynamique", "Rigoureuse", "Adaptable", "Créative",
+                        "Autonome", "Collaborative", "Persévérante", "Bienveillante"
+                    ]
+                    
+                    new_qualites = st.multiselect(
+                        "Sélectionne 4 qualités",
+                        options=qualites_dispo,
+                        default=qualites_actuelles[:4],
+                        max_selections=4,
+                        key="edit_qualites",
+                        label_visibility="collapsed"
+                    )
+                    
+                    # Option pour ajouter une qualité personnalisée
+                    qualite_custom = st.text_input("Ou ajoute une qualité personnalisée", key="edit_qualite_custom", placeholder="Ex: Innovante")
+                    if qualite_custom and len(new_qualites) < 4:
+                        new_qualites.append(qualite_custom)
+                    
+                    st.markdown("---")
+                    
+                    # === ÉDITION DES COMPÉTENCES ===
+                    st.markdown("**💪 Compétences prioritaires** (5 maximum)")
+                    
+                    competences_actuelles = cust.get('competences_prioritaires', [])
+                    
+                    # Afficher chaque compétence comme un input éditable
+                    new_competences = []
+                    for i in range(5):
+                        default_val = competences_actuelles[i] if i < len(competences_actuelles) else ""
+                        comp = st.text_input(
+                            f"Compétence {i+1}",
+                            value=default_val,
+                            key=f"edit_comp_{i}",
+                            placeholder=f"Compétence {i+1}..."
+                        )
+                        if comp:
+                            new_competences.append(comp)
+                    
+                    st.markdown("---")
+                    
+                    # === BOUTON APPLIQUER ===
+                    if st.button("✅ Appliquer mes modifications", type="primary", use_container_width=True):
+                        apply_manual_edits(new_accroche, new_qualites, new_competences)
+                        st.rerun()
+                    
+                    st.caption("💡 Tes modifications manuelles seront appliquées au CV et ajoutées à l'historique.")
+                
+                else:
+                    st.info("Génère d'abord un CV pour pouvoir l'éditer manuellement.")
 
 
 def generate_initial_cv(offre_text: str):
@@ -1991,6 +2081,64 @@ RÉPONDS UNIQUEMENT AVEC UN JSON VALIDE:
         
     except json.JSONDecodeError as e:
         st.error("❌ Erreur de parsing. Réessaie avec une demande plus simple.")
+    except Exception as e:
+        st.error(f"❌ Erreur: {str(e)}")
+
+
+def apply_manual_edits(accroche: str, qualites: list, competences: list):
+    """Applique les modifications manuelles de l'utilisateur au CV."""
+    try:
+        from utils.cv_generator import VALERIE_DATA_BASE, render_template
+        
+        # Convertir l'accroche (remplacer **mot** par les spans HTML)
+        accroche_html = accroche
+        # Remplacer **texte** par <span class='accroche-highlight'>texte</span>
+        import re
+        accroche_html = re.sub(r'\*\*(.+?)\*\*', r"<span class='accroche-highlight'>\1</span>", accroche_html)
+        
+        # Mettre à jour les customizations
+        current_cust = st.session_state.cv_customizations or {}
+        
+        new_customizations = {
+            **current_cust,
+            'accroche': accroche_html,
+            'qualites': qualites[:4] if qualites else current_cust.get('qualites', []),
+            'competences_prioritaires': competences[:5] if competences else current_cust.get('competences_prioritaires', []),
+            'modification_appliquee': 'Modifications manuelles appliquées'
+        }
+        
+        # Appliquer les personnalisations au template
+        cv_data = VALERIE_DATA_BASE.copy()
+        cv_data["accroche"] = new_customizations["accroche"]
+        cv_data["qualites"] = new_customizations["qualites"]
+        
+        # Compétences : prioritaires + autres
+        prioritaires = new_customizations["competences_prioritaires"]
+        autres = [c for c in VALERIE_DATA_BASE["competences"] if c not in prioritaires]
+        cv_data["competences"] = prioritaires + autres[:5]
+        
+        html = render_template(cv_data)
+        
+        # Incrémenter la version
+        st.session_state.cv_version = st.session_state.get('cv_version', 1) + 1
+        
+        # Ajouter à l'historique
+        if 'cv_modifications_history' not in st.session_state:
+            st.session_state.cv_modifications_history = []
+        
+        st.session_state.cv_modifications_history.append({
+            'version': st.session_state.cv_version,
+            'demande': '✏️ Édition manuelle',
+            'resultat': 'Accroche, qualités et compétences modifiées manuellement'
+        })
+        
+        # Mettre à jour le session state
+        st.session_state.cv_html_preview = html
+        st.session_state.cv_customizations = new_customizations
+        st.session_state.cv_current_data = cv_data
+        
+        st.success("✅ Modifications manuelles appliquées !")
+        
     except Exception as e:
         st.error(f"❌ Erreur: {str(e)}")
 

@@ -555,8 +555,11 @@ def save_candidature(titre_poste: str, entreprise: str, data: dict):
     history_dir = Path('data/historique')
     history_dir.mkdir(parents=True, exist_ok=True)
     
-    with open(history_dir / f"{candidature['id']}.json", 'w', encoding='utf-8') as f:
+    file_path = history_dir / f"{candidature['id']}.json"
+    with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(candidature, f, ensure_ascii=False, indent=2)
+    
+    return candidature
     
     return candidature
 
@@ -719,6 +722,34 @@ def render_accueil():
         """, unsafe_allow_html=True)
         if st.button("🚀 Lancer la génération express", type="primary", use_container_width=True, key="btn_express_home"):
             st.session_state.current_page = 'express'
+            st.rerun()
+    
+    st.markdown("---")
+    
+    # Outils complémentaires
+    st.markdown("### 💡 Outils complémentaires")
+    col_a, col_b = st.columns(2)
+    
+    with col_a:
+        st.markdown("""
+        <div class="feature-card" style="border-left: 4px solid #8b5cf6;">
+            <h3>💼 Posts LinkedIn</h3>
+            <p>Génère des posts dans ton style pour booster ta visibilité professionnelle</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Créer un post LinkedIn", key="btn_linkedin_home"):
+            st.session_state.current_page = 'linkedin'
+            st.rerun()
+    
+    with col_b:
+        st.markdown("""
+        <div class="feature-card" style="border-left: 4px solid #10b981;">
+            <h3>📚 Suivi des Candidatures</h3>
+            <p>Dashboard complet avec statistiques, rappels et historique de toutes tes candidatures</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Voir mon dashboard", key="btn_dashboard_home"):
+            st.session_state.current_page = 'historique'
             st.rerun()
     
     st.markdown("---")
@@ -1060,14 +1091,26 @@ Ton souhaité : {ton_lettre}
                     except Exception as e:
                         st.warning(f"Export DOCX non disponible: {e}")
             
-            # Bouton de sauvegarde
+            # Bouton de sauvegarde avec formulaire
             st.markdown("---")
+            st.markdown("### 💾 Sauvegarder cette candidature")
+            st.info("💡 **Astuce** : Sauvegarde pour retrouver tous tes documents dans le dashboard 'Mes candidatures'")
+            
+            with st.expander("📝 Informations de la candidature", expanded=True):
+                col_save1, col_save2 = st.columns(2)
+                with col_save1:
+                    titre_save_express = st.text_input("Titre du poste", value="", placeholder="Ex: Conseiller(e) en Insertion Professionnelle", key="express_titre_save")
+                with col_save2:
+                    entreprise_save_express = st.text_input("Entreprise", value="", placeholder="Ex: France Travail", key="express_entreprise_save")
+            
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("💾 Sauvegarder cette candidature", type="primary", use_container_width=True):
-                    save_candidature(
-                        titre_poste="Candidature Express",
-                        entreprise="À définir",
+                    titre = titre_save_express if titre_save_express else "Candidature Express"
+                    entreprise = entreprise_save_express if entreprise_save_express else "Non spécifié"
+                    result = save_candidature(
+                        titre_poste=titre,
+                        entreprise=entreprise,
                         data={
                             'cv_adapte': results['cv'],
                             'lettre_motivation': results['lettre'],
@@ -1076,7 +1119,11 @@ Ton souhaité : {ton_lettre}
                             'offre': offre_text
                         }
                     )
-                    st.success("✅ Candidature complète sauvegardée dans l'historique !")
+                    if result:
+                        st.success("✅ Candidature sauvegardée avec succès !")
+                        st.info("💡 Tu peux retrouver cette candidature dans **'📚 Mes candidatures'** pour suivre son évolution")
+                    else:
+                        st.warning("⚠️ Sauvegarde locale uniquement (Supabase non disponible)")
             
             with col2:
                 # Export complet
@@ -2443,6 +2490,25 @@ def render_historique():
     render_header()
     
     st.markdown("## 📚 Suivi des Candidatures")
+    
+    # Explication du fonctionnement
+    with st.expander("ℹ️ Comment ça fonctionne ?", expanded=False):
+        st.markdown("""
+        **🔄 Synchronisation automatique :**
+        
+        Toutes tes candidatures sont automatiquement synchronisées ici quand tu :
+        - ✅ Sauvegardes après une **Génération Express**
+        - ✅ Sauvegardes un **CV Personnalisé** (avec option de liaison)
+        - ✅ Sauvegardes une **Lettre de motivation** ou **Préparation entretien**
+        
+        **📊 Dashboard :**
+        - Vois tes statistiques en temps réel
+        - Suis l'évolution de chaque candidature
+        - Ajoute des événements (relances, entretiens, etc.)
+        - Définis des rappels
+        
+        **💡 Astuce :** Les CV personnalisés liés à une candidature apparaissent dans l'onglet CV de chaque candidature.
+        """)
     
     supabase = get_supabase_client()
     

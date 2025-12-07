@@ -37,7 +37,8 @@ from prompts.task_prompts import (
     PROMPT_ANALYSE_COMPATIBILITE,
     PROMPT_COACH_CONVERSATION,
     PROMPT_LINKEDIN_POST,
-    PROMPT_ADAPTER_CV_TEMPLATE
+    PROMPT_ADAPTER_CV_TEMPLATE,
+    PROMPT_MODIFIER_CV_COMPLET
 )
 from utils.llm_client import LLMClient
 from utils.pdf_parser import extract_text_from_pdf
@@ -1709,12 +1710,14 @@ def render_cv_personnalise():
             st.markdown("**💡 Suggestions rapides:**")
             
             suggestions = [
-                ("🎯 Accroche plus percutante", "Rends l'accroche plus percutante et dynamique, avec des verbes d'action"),
-                ("💼 + France Travail", "Mets davantage en avant mon expérience actuelle chez France Travail"),
-                ("🏃 + Sport & JO", "Valorise mon engagement sportif (Ironman, JO Paris 2024) comme atouts professionnels"),
-                ("📝 Compétences CIP", "Reformule les compétences pour mieux correspondre au référentiel CIP"),
-                ("🤝 + Relationnel", "Accentue mes compétences relationnelles et d'accompagnement"),
-                ("🎓 + Formation", "Mets plus en valeur ma formation CIP récente (2025)")
+                ("🎯 Accroche percutante", "Rends l'accroche plus percutante et dynamique, avec des verbes d'action qui correspondent à l'offre"),
+                ("💼 Expériences adaptées", "Reformule les intitulés de mes expériences professionnelles pour mieux correspondre aux termes de l'offre"),
+                ("🏃 + Sport & JO", "Ajoute ou valorise mon engagement sportif (Ironman, JO Paris 2024) dans les intérêts et le bénévolat"),
+                ("📝 Compétences CIP", "Reformule toutes les compétences pour correspondre au référentiel CIP et aux attentes de l'offre"),
+                ("📋 Stages pertinents", "Reformule mes missions de stage pour les rendre plus pertinentes par rapport à cette offre"),
+                ("🎓 Formation mise en avant", "Mets en valeur ma formation CIP 2025 et mes certifications récentes"),
+                ("🤝 Soft skills", "Accentue mes compétences relationnelles dans l'accroche et les expériences"),
+                ("🎯 Centres d'intérêt ciblés", "Adapte mes centres d'intérêt pour qu'ils résonnent avec la culture de l'entreprise")
             ]
             
             cols = st.columns(2)
@@ -2119,75 +2122,80 @@ def generate_initial_cv(offre_text: str):
 
 
 def apply_cv_feedback(feedback: str):
-    """Applique un feedback utilisateur pour modifier le CV."""
+    """Applique un feedback utilisateur pour modifier TOUT le CV."""
     try:
         import json
         from utils.cv_generator import VALERIE_DATA_BASE, render_template
         
         llm = get_llm()
         
-        # Construire le contexte avec l'historique
-        current_cust = st.session_state.cv_customizations or {}
+        # Récupérer les données actuelles du CV
+        cv_data = st.session_state.cv_current_data or VALERIE_DATA_BASE.copy()
         
-        prompt = f"""Le CV de Valérie a été personnalisé avec ces éléments actuels:
-
-<personnalisations_actuelles>
-Accroche: {current_cust.get('accroche', 'Non définie')}
-Qualités: {current_cust.get('qualites', [])}
-Compétences prioritaires: {current_cust.get('competences_prioritaires', [])}
-</personnalisations_actuelles>
-
-<offre_emploi>
-{st.session_state.cv_offre_text[:2000]}
-</offre_emploi>
-
-L'utilisateur demande cette modification:
-"{feedback}"
-
-Applique cette modification et renvoie le JSON mis à jour avec TOUTES les personnalisations (garde ce qui n'est pas modifié).
-
-RÉPONDS UNIQUEMENT AVEC UN JSON VALIDE:
-```json
-{{
-    "accroche": "Accroche mise à jour (avec <span class='accroche-highlight'>mots clés</span> en gras)",
-    "qualites": ["Qualité1", "Qualité2", "Qualité3", "Qualité4"],
-    "competences_prioritaires": ["Compétence1", "Compétence2", "Compétence3", "Compétence4", "Compétence5"],
-    "mots_cles_offre": ["mot1", "mot2"],
-    "conseil_personnalisation": "Explication courte de la modification appliquée",
-    "modification_appliquee": "Description courte et précise de ce qui a été changé"
-}}
-```"""
+        # Construire le contexte avec toutes les données du CV
+        cv_data_str = json.dumps({
+            'accroche': cv_data.get('accroche', ''),
+            'qualites': cv_data.get('qualites', []),
+            'competences': cv_data.get('competences', []),
+            'experiences': cv_data.get('experiences', []),
+            'stages': cv_data.get('stages', []),
+            'benevolat': cv_data.get('benevolat', []),
+            'interets': cv_data.get('interets', [])
+        }, ensure_ascii=False, indent=2)
+        
+        # Utiliser le nouveau prompt complet
+        prompt = PROMPT_MODIFIER_CV_COMPLET.format(
+            cv_data=cv_data_str,
+            offre=st.session_state.cv_offre_text[:3000],
+            demande=feedback
+        )
         
         result = llm.generate(
             prompt=prompt,
             system_prompt=SYSTEM_PROMPT_CV,
-            max_tokens=2000
+            max_tokens=4000
         )
         
         # Parser le JSON
         json_match = re.search(r'```json\s*(.*?)\s*```', result, re.DOTALL)
         json_str = json_match.group(1) if json_match else result
-        new_customizations = json.loads(json_str)
+        new_data = json.loads(json_str)
         
-        # Appliquer les nouvelles personnalisations
-        cv_data = VALERIE_DATA_BASE.copy()
+        # Appliquer TOUTES les modifications au cv_data
+        if "accroche" in new_data:
+            cv_data["accroche"] = new_data["accroche"]
+        if "qualites" in new_data:
+            cv_data["qualites"] = new_data["qualites"][:4]
+        if "competences" in new_data:
+            cv_data["competences"] = new_data["competences"]
+        if "experiences" in new_data:
+            cv_data["experiences"] = new_data["experiences"]
+        if "stages" in new_data:
+            cv_data["stages"] = new_data["stages"]
+        if "benevolat" in new_data:
+            cv_data["benevolat"] = new_data["benevolat"]
+        if "interets" in new_data:
+            cv_data["interets"] = new_data["interets"]
         
-        if "accroche" in new_customizations:
-            cv_data["accroche"] = new_customizations["accroche"]
-        if "qualites" in new_customizations:
-            cv_data["qualites"] = new_customizations["qualites"][:4]
-        if "competences_prioritaires" in new_customizations:
-            prioritaires = new_customizations["competences_prioritaires"]
-            autres = [c for c in VALERIE_DATA_BASE["competences"] if c not in prioritaires]
-            cv_data["competences"] = prioritaires[:5] + autres[:5]
-        
+        # Générer le HTML
         html = render_template(cv_data)
         
         # Incrémenter la version
         st.session_state.cv_version = st.session_state.get('cv_version', 1) + 1
         
         # Ajouter à l'historique des modifications
-        modification_msg = new_customizations.get('modification_appliquee', new_customizations.get('conseil_personnalisation', 'Modifications appliquées'))
+        sections_modifiees = new_data.get('sections_modifiees', [])
+        modification_msg = new_data.get('modification_appliquee', 'Modifications appliquées')
+        
+        # Mettre à jour les customizations
+        new_customizations = {
+            'accroche': cv_data.get('accroche', ''),
+            'qualites': cv_data.get('qualites', []),
+            'competences_prioritaires': cv_data.get('competences', [])[:5],
+            'mots_cles_offre': new_data.get('mots_cles_offre', []),
+            'modification_appliquee': modification_msg,
+            'sections_modifiees': sections_modifiees
+        }
         
         if 'cv_modifications_history' not in st.session_state:
             st.session_state.cv_modifications_history = []

@@ -216,7 +216,7 @@ Réponds de manière :
 - Avec des exemples concrets quand pertinent
 - En tutoyant Valérie"""
 
-PROMPT_ADAPTER_CV_TEMPLATE = """Analyse cette offre d'emploi et propose des personnalisations pour le CV de Valérie.
+PROMPT_ADAPTER_CV_TEMPLATE = """Analyse cette offre d'emploi et propose des personnalisations COMPLÈTES pour le CV de Valérie.
 
 <offre_emploi>
 {offre}
@@ -250,6 +250,70 @@ RÈGLES :
 2. Les qualités doivent être choisies parmi : Déterminée, Engagée, Résiliente, Fédératrice, Polyvalente, Organisée, Proactive, Empathique
 3. Les compétences prioritaires doivent être reformulées si besoin pour matcher l'offre
 4. Limite-toi à 5 compétences prioritaires maximum
+5. RÉPONDS UNIQUEMENT AVEC LE JSON, rien d'autre"""
+
+
+PROMPT_MODIFIER_CV_COMPLET = """Tu es un expert en adaptation de CV. Le CV de Valérie a été personnalisé et l'utilisateur demande une modification.
+
+<cv_donnees_actuelles>
+{cv_data}
+</cv_donnees_actuelles>
+
+<offre_emploi>
+{offre}
+</offre_emploi>
+
+<demande_modification>
+{demande}
+</demande_modification>
+
+Applique la modification demandée. Tu peux modifier N'IMPORTE QUELLE partie du CV si c'est pertinent :
+- Accroche
+- Qualités
+- Compétences (reformuler, réordonner)
+- Expériences (reformuler les postes, mettre en avant certaines)
+- Stages (reformuler les missions)
+- Bénévolat
+- Centres d'intérêt
+
+RÉPONDS UNIQUEMENT AVEC UN JSON VALIDE contenant les champs modifiés :
+
+```json
+{{
+    "accroche": "Accroche modifiée si nécessaire (avec <span class='accroche-highlight'>mots clés</span> en gras)",
+    "qualites": ["Qualité1", "Qualité2", "Qualité3", "Qualité4"],
+    "competences": [
+        "Compétence 1",
+        "Compétence 2",
+        "etc..."
+    ],
+    "experiences": [
+        {{"entreprise": "Nom", "poste": "Intitulé reformulé", "dates": "Dates"}},
+        ...
+    ],
+    "stages": [
+        {{"lieu": "Nom", "mission": "Mission reformulée", "dates": "Dates"}},
+        ...
+    ],
+    "benevolat": [
+        {{"evenement": "Nom", "role": "Rôle reformulé"}},
+        ...
+    ],
+    "interets": [
+        {{"titre": "Titre", "detail": "Détail"}},
+        ...
+    ],
+    "mots_cles_offre": ["mot1", "mot2"],
+    "modification_appliquee": "Description précise de ce qui a été modifié",
+    "sections_modifiees": ["accroche", "competences", "experiences"]
+}}
+```
+
+RÈGLES :
+1. Ne modifie QUE ce qui est demandé + ce qui est directement lié
+2. Garde les autres sections identiques (copie-les telles quelles)
+3. Pour les expériences, garde TOUTES les expériences mais reformule si demandé
+4. Sois précis dans "modification_appliquee" pour expliquer les changements
 5. RÉPONDS UNIQUEMENT AVEC LE JSON, rien d'autre"""
 
 

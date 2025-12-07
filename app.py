@@ -898,7 +898,7 @@ def render_express():
                 results['cv'] = llm.generate(
                     prompt=prompt,
                     system_prompt=SYSTEM_PROMPT_CV,
-                    max_tokens=5000
+                    max_tokens=7000
                 )
             progress_bar.progress(50)
             
@@ -918,7 +918,7 @@ Ton souhaité : {ton_lettre}
                 results['lettre'] = llm.generate(
                     prompt=prompt,
                     system_prompt=SYSTEM_PROMPT_LETTRE,
-                    max_tokens=3500
+                    max_tokens=7500
                 )
             progress_bar.progress(75)
             
@@ -1150,7 +1150,7 @@ def render_analyser_offre():
                 result = llm.generate(
                     prompt=prompt,
                     system_prompt=SYSTEM_PROMPT_ANALYSE,
-                    max_tokens=4096
+                    max_tokens=6096
                 )
                 
                 st.session_state.analyse_compatibilite = result
@@ -2286,7 +2286,7 @@ def generate_initial_cv(offre_text: str):
         result = llm.generate(
             prompt=prompt,
             system_prompt=SYSTEM_PROMPT_CV,
-            max_tokens=2000
+            max_tokens=8000
         )
         
         # Parser le JSON
@@ -2361,7 +2361,7 @@ def apply_cv_feedback(feedback: str):
         result = llm.generate(
             prompt=prompt,
             system_prompt=SYSTEM_PROMPT_CV,
-            max_tokens=4000
+            max_tokens=8000
         )
         
         # Parser le JSON
@@ -2970,7 +2970,7 @@ def render_coach():
                 for chunk in llm.chat_stream(
                     messages=messages,
                     system_prompt=system,
-                    max_tokens=3000
+                    max_tokens=6000
                 ):
                     full_response += chunk
                     response_placeholder.markdown(full_response + "▌")
@@ -3358,11 +3358,98 @@ def render_historique():
 
 
 # ============================================================================
+# AUTHENTIFICATION
+# ============================================================================
+
+def check_password():
+    """Vérifie le mot de passe pour accéder à l'application."""
+    
+    # Récupérer le mot de passe depuis les secrets Streamlit ou variable d'environnement
+    # En local : utilise le mot de passe par défaut
+    # En déploiement : utilise st.secrets
+    try:
+        correct_password = st.secrets.get("APP_PASSWORD", "Alex1991")
+    except:
+        correct_password = os.getenv("APP_PASSWORD", "Alex1991")
+    
+    # Initialiser l'état d'authentification
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+    
+    # Si déjà authentifié, retourner True
+    if st.session_state.authenticated:
+        return True
+    
+    # Afficher le formulaire de connexion
+    st.markdown("""
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(30, 58, 95, 0.9) 0%, rgba(45, 90, 138, 0.9) 100%);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        .login-title {
+            color: #c9a227;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .login-subtitle {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        st.markdown("""
+        <div style="text-align: center; padding: 20px;">
+            <h1 style="color: #c9a227; margin-bottom: 5px;">🔐 CV Maker</h1>
+            <p style="color: #94a3b8; font-size: 1rem;">Outil personnel de Valérie Jasica</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Champ mot de passe
+        password = st.text_input(
+            "Mot de passe",
+            type="password",
+            placeholder="Entre le mot de passe...",
+            key="password_input"
+        )
+        
+        if st.button("🚀 Accéder à l'application", type="primary", use_container_width=True):
+            if password == correct_password:
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("❌ Mot de passe incorrect")
+        
+        st.markdown("""
+        <div style="text-align: center; margin-top: 30px; color: #64748b; font-size: 0.8rem;">
+            💡 Cet outil est réservé à un usage personnel
+        </div>
+        """, unsafe_allow_html=True)
+    
+    return False
+
+
+# ============================================================================
 # MAIN
 # ============================================================================
 
 def main():
     """Point d'entrée principal de l'application."""
+    
+    # Vérifier l'authentification
+    if not check_password():
+        return
+    
     # Charger les styles
     load_custom_css()
     

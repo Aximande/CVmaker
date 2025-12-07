@@ -1579,9 +1579,6 @@ def render_cv_personnalise():
     render_header()
     
     st.markdown("## 🎨 CV Personnalisé")
-    st.markdown("""
-    Génère un **CV adapté automatiquement** à chaque offre d'emploi, puis **affine-le** avec tes retours.
-    """)
     
     # Initialiser les états de session
     if 'cv_chat_history' not in st.session_state:
@@ -1590,119 +1587,191 @@ def render_cv_personnalise():
         st.session_state.cv_current_data = None
     if 'cv_offre_text' not in st.session_state:
         st.session_state.cv_offre_text = ""
+    if 'cv_modifications_history' not in st.session_state:
+        st.session_state.cv_modifications_history = []
+    if 'cv_version' not in st.session_state:
+        st.session_state.cv_version = 0
     
-    # Layout en 2 colonnes : gauche = contrôles/chat, droite = preview
-    col_left, col_right = st.columns([1, 1.2])
+    # === WORKFLOW EN 3 ÉTAPES ===
     
-    with col_left:
-        # === SECTION 1: INPUT OFFRE ===
-        with st.expander("📋 Offre d'emploi cible", expanded=not st.session_state.cv_current_data):
-            tab1, tab2 = st.tabs(["📝 Texte", "📎 PDF"])
-            
-            with tab1:
-                offre_text = st.text_area(
-                    "Colle l'offre ici",
-                    height=150,
-                    placeholder="Colle le contenu de l'offre d'emploi...",
-                    key="cv_perso_offre_input",
-                    value=st.session_state.cv_offre_text
-                )
-            
-            with tab2:
-                uploaded_file = st.file_uploader("Fichier PDF", type=['pdf'], key="cv_perso_pdf")
-                if uploaded_file:
-                    offre_text = extract_text_from_pdf(uploaded_file)
-                    st.success("✅ PDF extrait !")
-            
-            # Boutons d'action
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("🎨 Générer CV adapté", type="primary", use_container_width=True):
-                    if offre_text and len(offre_text.strip()) > 50:
-                        st.session_state.cv_offre_text = offre_text
-                        generate_initial_cv(offre_text)
-                        st.rerun()
-                    else:
-                        st.warning("⚠️ Offre trop courte")
-            
-            with col_b:
-                if st.button("🔄 Réinitialiser", use_container_width=True):
-                    st.session_state.cv_chat_history = []
-                    st.session_state.cv_current_data = None
-                    st.session_state.cv_html_preview = None
-                    st.session_state.cv_customizations = None
-                    st.rerun()
+    # Indicateur de progression
+    step = 1
+    if st.session_state.cv_current_data:
+        step = 2
+    if st.session_state.cv_version > 1:
+        step = 3
+    
+    st.markdown(f"""
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <div style="flex: 1; padding: 10px; border-radius: 8px; text-align: center;
+                    background: {'rgba(16, 185, 129, 0.3)' if step >= 1 else 'rgba(100, 100, 100, 0.2)'};">
+            <div style="font-size: 1.5rem;">1️⃣</div>
+            <div style="font-size: 0.8rem; color: {'#10b981' if step >= 1 else '#6b7280'};">Coller l'offre</div>
+        </div>
+        <div style="flex: 1; padding: 10px; border-radius: 8px; text-align: center;
+                    background: {'rgba(16, 185, 129, 0.3)' if step >= 2 else 'rgba(100, 100, 100, 0.2)'};">
+            <div style="font-size: 1.5rem;">2️⃣</div>
+            <div style="font-size: 0.8rem; color: {'#10b981' if step >= 2 else '#6b7280'};">CV généré</div>
+        </div>
+        <div style="flex: 1; padding: 10px; border-radius: 8px; text-align: center;
+                    background: {'rgba(16, 185, 129, 0.3)' if step >= 3 else 'rgba(100, 100, 100, 0.2)'};">
+            <div style="font-size: 1.5rem;">3️⃣</div>
+            <div style="font-size: 0.8rem; color: {'#10b981' if step >= 3 else '#6b7280'};">Affiné</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # === ÉTAPE 1: INPUT OFFRE ===
+    if not st.session_state.cv_current_data:
+        st.markdown("### 📋 Étape 1 : Colle l'offre d'emploi")
         
-        # === SECTION 2: CHAT ITÉRATIF ===
-        if st.session_state.cv_current_data:
-            st.markdown("### 💬 Affiner le CV")
-            st.caption("Donne tes retours pour modifier le CV")
-            
-            # Afficher l'historique du chat
-            chat_container = st.container()
-            with chat_container:
-                for msg in st.session_state.cv_chat_history:
-                    if msg['role'] == 'user':
-                        st.markdown(f"""
-                        <div style="background: rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 10px 15px; margin: 8px 0; border-left: 3px solid #6366f1;">
-                            <strong>Toi:</strong> {msg['content']}
-                        </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"""
-                        <div style="background: rgba(16, 185, 129, 0.15); border-radius: 12px; padding: 10px 15px; margin: 8px 0; border-left: 3px solid #10b981;">
-                            <strong>🤖 Assistant:</strong> {msg['content']}
-                        </div>
-                        """, unsafe_allow_html=True)
-            
-            # Input de feedback
-            feedback = st.text_input(
-                "Tes modifications",
-                placeholder="Ex: Mets plus en avant l'expérience France Travail, change l'accroche pour...",
-                key="cv_feedback_input"
+        tab1, tab2 = st.tabs(["📝 Coller le texte", "📎 Uploader un PDF"])
+        
+        with tab1:
+            offre_text = st.text_area(
+                "Offre d'emploi",
+                height=200,
+                placeholder="Colle ici le contenu complet de l'offre d'emploi...\n\nPlus l'offre est détaillée, meilleure sera la personnalisation !",
+                key="cv_perso_offre_input"
             )
+        
+        with tab2:
+            uploaded_file = st.file_uploader("Fichier PDF de l'offre", type=['pdf'], key="cv_perso_pdf")
+            if uploaded_file:
+                offre_text = extract_text_from_pdf(uploaded_file)
+                st.success("✅ PDF extrait avec succès !")
+                with st.expander("Voir le texte extrait"):
+                    st.text(offre_text[:1000] + "..." if len(offre_text) > 1000 else offre_text)
+        
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            if st.button("🎨 Générer mon CV personnalisé", type="primary", use_container_width=True):
+                if offre_text and len(offre_text.strip()) > 50:
+                    st.session_state.cv_offre_text = offre_text
+                    with st.spinner("🔄 Analyse de l'offre et personnalisation du CV..."):
+                        generate_initial_cv(offre_text)
+                    st.rerun()
+                else:
+                    st.warning("⚠️ L'offre est trop courte. Colle au moins le descriptif du poste.")
+        
+        with col2:
+            if st.button("👁️ Voir mon CV actuel", use_container_width=True):
+                st.session_state.show_default_cv = True
+        
+        # Afficher le CV par défaut si demandé
+        if st.session_state.get('show_default_cv'):
+            st.markdown("---")
+            st.markdown("### 📄 Mon CV actuel (non personnalisé)")
+            try:
+                from utils.cv_generator import generate_cv_html
+                default_html = generate_cv_html()
+                import streamlit.components.v1 as components
+                components.html(default_html, height=700, scrolling=True)
+            except Exception as e:
+                st.error(f"Erreur: {e}")
+    
+    else:
+        # === ÉTAPE 2 & 3: CV GÉNÉRÉ + AFFINAGE ===
+        
+        # Layout en 2 colonnes
+        col_left, col_right = st.columns([1, 1.3])
+        
+        with col_left:
+            # === PANNEAU DE MODIFICATIONS ===
+            st.markdown("### ✏️ Modifier le CV")
             
-            # Suggestions rapides
+            # Résumé des modifications actuelles
+            if st.session_state.get('cv_customizations'):
+                cust = st.session_state.cv_customizations
+                
+                st.markdown(f"""
+                <div style="background: rgba(99, 102, 241, 0.1); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid rgba(99, 102, 241, 0.3);">
+                    <div style="font-size: 0.85rem; color: #a5b4fc; margin-bottom: 5px;">📊 Version {st.session_state.cv_version}</div>
+                    <div style="font-size: 0.9rem;"><strong>Mots-clés détectés:</strong> {', '.join(cust.get('mots_cles_offre', ['Non défini']))}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # === HISTORIQUE DES MODIFICATIONS ===
+            if st.session_state.cv_modifications_history:
+                with st.expander(f"📜 Historique ({len(st.session_state.cv_modifications_history)} modification(s))", expanded=False):
+                    for i, modif in enumerate(reversed(st.session_state.cv_modifications_history)):
+                        st.markdown(f"""
+                        <div style="background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 3px solid #6366f1;">
+                            <div style="font-size: 0.75rem; color: #94a3b8;">v{len(st.session_state.cv_modifications_history) - i}</div>
+                            <div style="font-size: 0.85rem;">{modif.get('demande', 'Génération initiale')}</div>
+                            <div style="font-size: 0.75rem; color: #10b981; margin-top: 5px;">✓ {modif.get('resultat', 'Appliqué')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # === SUGGESTIONS RAPIDES ===
             st.markdown("**💡 Suggestions rapides:**")
-            suggestion_cols = st.columns(2)
             
             suggestions = [
-                ("🎯 Accroche plus percutante", "Rends l'accroche plus percutante et impactante"),
-                ("💼 + expérience récente", "Mets plus en avant mon expérience récente chez France Travail"),
-                ("🏃 + sport/engagement", "Ajoute une mention de mon engagement sportif et bénévole"),
-                ("📝 Reformuler compétences", "Reformule les compétences pour qu'elles matchent mieux l'offre"),
+                ("🎯 Accroche plus percutante", "Rends l'accroche plus percutante et dynamique, avec des verbes d'action"),
+                ("💼 + France Travail", "Mets davantage en avant mon expérience actuelle chez France Travail"),
+                ("🏃 + Sport & JO", "Valorise mon engagement sportif (Ironman, JO Paris 2024) comme atouts professionnels"),
+                ("📝 Compétences CIP", "Reformule les compétences pour mieux correspondre au référentiel CIP"),
+                ("🤝 + Relationnel", "Accentue mes compétences relationnelles et d'accompagnement"),
+                ("🎓 + Formation", "Mets plus en valeur ma formation CIP récente (2025)")
             ]
             
+            cols = st.columns(2)
             for i, (label, prompt) in enumerate(suggestions):
-                col = suggestion_cols[i % 2]
-                with col:
+                with cols[i % 2]:
                     if st.button(label, key=f"sugg_{i}", use_container_width=True):
                         apply_cv_feedback(prompt)
                         st.rerun()
             
-            # Bouton envoyer feedback personnalisé
-            if st.button("✨ Appliquer mes modifications", type="primary", use_container_width=True, disabled=not feedback):
-                if feedback:
-                    apply_cv_feedback(feedback)
-                    st.rerun()
-        
-        # === SECTION 3: TÉLÉCHARGEMENTS & SAUVEGARDE ===
-        if st.session_state.get('cv_html_preview'):
             st.markdown("---")
-            st.markdown("### 📥 Télécharger & Sauvegarder")
             
-            dl_col1, dl_col2, dl_col3 = st.columns(3)
+            # === MODIFICATION PERSONNALISÉE ===
+            st.markdown("**✍️ Ou demande une modification spécifique:**")
+            
+            feedback = st.text_area(
+                "Ta demande",
+                height=80,
+                placeholder="Ex: Change l'accroche pour mentionner mon projet socio-sportif...",
+                key="cv_feedback_input"
+            )
+            
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("✨ Appliquer", type="primary", use_container_width=True, disabled=not feedback):
+                    if feedback:
+                        apply_cv_feedback(feedback)
+                        st.rerun()
+            
+            with col_b:
+                if st.button("🔄 Recommencer", use_container_width=True):
+                    st.session_state.cv_chat_history = []
+                    st.session_state.cv_current_data = None
+                    st.session_state.cv_html_preview = None
+                    st.session_state.cv_customizations = None
+                    st.session_state.cv_modifications_history = []
+                    st.session_state.cv_version = 0
+                    st.rerun()
+            
+            st.markdown("---")
+            
+            # === TÉLÉCHARGEMENT ===
+            st.markdown("### 📥 Télécharger")
+            
+            dl_col1, dl_col2 = st.columns(2)
             
             with dl_col1:
                 st.download_button(
-                    "📄 HTML",
+                    "📄 Télécharger HTML",
                     data=st.session_state.cv_html_preview,
-                    file_name=f"CV_Valerie_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                    file_name=f"CV_Valerie_v{st.session_state.cv_version}_{datetime.now().strftime('%Y%m%d')}.html",
                     mime="text/html",
                     use_container_width=True
                 )
             
             with dl_col2:
+                # Essayer weasyprint, sinon proposer une alternative
+                pdf_generated = False
                 try:
                     from weasyprint import HTML
                     import io
@@ -1712,104 +1781,73 @@ def render_cv_personnalise():
                     pdf_buffer.seek(0)
                     
                     st.download_button(
-                        "📑 PDF",
+                        "📑 Télécharger PDF",
                         data=pdf_buffer,
-                        file_name=f"CV_Valerie_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                        file_name=f"CV_Valerie_v{st.session_state.cv_version}_{datetime.now().strftime('%Y%m%d')}.pdf",
                         mime="application/pdf",
                         use_container_width=True
                     )
+                    pdf_generated = True
                 except Exception as e:
-                    st.button("📑 PDF (erreur)", disabled=True, use_container_width=True)
+                    pass
+                
+                if not pdf_generated:
+                    st.info("💡 **Pour obtenir un PDF:** Télécharge le HTML, ouvre-le dans ton navigateur, puis Imprimer → Enregistrer en PDF")
             
-            with dl_col3:
-                if st.button("💾 Sauvegarder", use_container_width=True, type="secondary"):
-                    st.session_state.show_save_dialog = True
+            st.markdown("---")
             
-            # Dialog de sauvegarde avec option de liaison candidature
-            if st.session_state.get('show_save_dialog'):
-                with st.container():
-                    st.markdown("#### 💾 Sauvegarder le CV")
-                    
-                    # Champs pour le titre et l'entreprise
-                    save_col1, save_col2 = st.columns(2)
-                    with save_col1:
-                        titre_save = st.text_input("Titre du poste", value="Conseiller(e) en Insertion", key="cv_save_titre")
-                    with save_col2:
-                        entreprise_save = st.text_input("Entreprise", value="France Travail", key="cv_save_entreprise")
-                    
-                    # Option de liaison avec candidature
-                    lier_candidature = st.checkbox("🔗 Lier à une candidature", key="cv_lier_candidature")
-                    
-                    candidature_id = None
-                    if lier_candidature:
-                        supabase = get_supabase_client()
-                        candidatures = supabase.get_candidatures(limit=10)
-                        
-                        if candidatures:
-                            options = ["➕ Créer nouvelle candidature"] + [
-                                f"{c.get('titre_poste', 'Sans titre')} - {c.get('entreprise', '')}" 
-                                for c in candidatures
-                            ]
-                            selection = st.selectbox("Candidature", options, key="cv_select_candidature")
-                            
-                            if selection != "➕ Créer nouvelle candidature":
-                                idx = options.index(selection) - 1
-                                candidature_id = candidatures[idx].get('id')
-                        else:
-                            st.info("Aucune candidature existante. Une nouvelle sera créée.")
-                    
-                    # Boutons de confirmation
-                    btn_col1, btn_col2 = st.columns(2)
-                    with btn_col1:
-                        if st.button("✅ Confirmer", type="primary", use_container_width=True):
-                            save_cv_to_supabase(
-                                titre=titre_save, 
-                                entreprise=entreprise_save,
-                                candidature_id=candidature_id,
-                                create_candidature=lier_candidature and candidature_id is None
-                            )
-                            st.session_state.show_save_dialog = False
-                            st.rerun()
-                    with btn_col2:
-                        if st.button("❌ Annuler", use_container_width=True):
-                            st.session_state.show_save_dialog = False
-                            st.rerun()
+            # === SAUVEGARDE ===
+            st.markdown("### 💾 Sauvegarder")
             
-            # Afficher les CV sauvegardés
-            with st.expander("📚 Mes CV sauvegardés", expanded=False):
-                render_saved_cvs()
-    
-    # === COLONNE DROITE: PREVIEW ===
-    with col_right:
-        st.markdown("### 📄 Prévisualisation")
+            with st.expander("Sauvegarder ce CV", expanded=False):
+                save_col1, save_col2 = st.columns(2)
+                with save_col1:
+                    titre_save = st.text_input("Titre du poste", value="Conseiller(e) en Insertion", key="cv_save_titre")
+                with save_col2:
+                    entreprise_save = st.text_input("Entreprise", value="France Travail", key="cv_save_entreprise")
+                
+                lier_candidature = st.checkbox("🔗 Créer/lier à une candidature", value=True, key="cv_lier_candidature")
+                
+                if st.button("💾 Sauvegarder", type="primary", use_container_width=True):
+                    save_cv_to_supabase(
+                        titre=titre_save,
+                        entreprise=entreprise_save,
+                        candidature_id=None,
+                        create_candidature=lier_candidature
+                    )
         
-        if st.session_state.get('cv_html_preview'):
-            # Afficher les personnalisations actuelles
+        # === COLONNE DROITE: PREVIEW ===
+        with col_right:
+            st.markdown("### 📄 Aperçu du CV")
+            
+            # Afficher les personnalisations actuelles de façon claire
             if st.session_state.get('cv_customizations'):
                 cust = st.session_state.cv_customizations
-                with st.expander("🎯 Personnalisations actuelles", expanded=False):
-                    if "conseil_personnalisation" in cust:
-                        st.info(f"💡 {cust['conseil_personnalisation']}")
-                    if "mots_cles_offre" in cust:
-                        st.markdown(f"**Mots-clés**: {', '.join(cust.get('mots_cles_offre', []))}")
-                    if "qualites" in cust:
-                        st.markdown(f"**Qualités**: {' • '.join(cust.get('qualites', []))}")
+                
+                with st.expander("🔍 Voir les personnalisations appliquées", expanded=True):
+                    st.markdown("**📝 Accroche personnalisée:**")
+                    accroche = cust.get('accroche', 'Non définie')
+                    # Nettoyer les tags HTML pour l'affichage
+                    accroche_clean = accroche.replace("<span class='accroche-highlight'>", "**").replace("</span>", "**")
+                    st.markdown(f"> {accroche_clean}")
+                    
+                    col_q, col_c = st.columns(2)
+                    with col_q:
+                        st.markdown("**✨ Qualités:**")
+                        for q in cust.get('qualites', []):
+                            st.markdown(f"• {q}")
+                    
+                    with col_c:
+                        st.markdown("**💪 Compétences clés:**")
+                        for c in cust.get('competences_prioritaires', [])[:5]:
+                            st.markdown(f"• {c}")
             
-            # Preview HTML
-            import streamlit.components.v1 as components
-            components.html(st.session_state.cv_html_preview, height=850, scrolling=True)
-        else:
-            # État initial - afficher le CV par défaut
-            st.info("👈 Colle une offre d'emploi et clique sur **Générer CV adapté** pour commencer")
-            
-            # Afficher un aperçu du CV par défaut
-            try:
-                from utils.cv_generator import generate_cv_html
-                default_html = generate_cv_html()
+            # Preview HTML du CV
+            if st.session_state.get('cv_html_preview'):
                 import streamlit.components.v1 as components
-                components.html(default_html, height=850, scrolling=True)
-            except Exception as e:
-                st.warning(f"Impossible d'afficher le CV par défaut: {e}")
+                components.html(st.session_state.cv_html_preview, height=750, scrolling=True)
+            else:
+                st.warning("Erreur: Aucun aperçu disponible")
 
 
 def generate_initial_cv(offre_text: str):
@@ -1854,10 +1892,13 @@ def generate_initial_cv(offre_text: str):
         st.session_state.cv_html_preview = html
         st.session_state.cv_customizations = customizations
         st.session_state.cv_current_data = cv_data
-        st.session_state.cv_chat_history = [{
-            'role': 'assistant',
-            'content': f"✅ CV adapté généré ! J'ai identifié les mots-clés: **{', '.join(customizations.get('mots_cles_offre', []))}**. {customizations.get('conseil_personnalisation', '')}"
+        st.session_state.cv_version = 1
+        st.session_state.cv_modifications_history = [{
+            'version': 1,
+            'demande': 'Génération initiale basée sur l\'offre',
+            'resultat': f"Mots-clés détectés: {', '.join(customizations.get('mots_cles_offre', []))}"
         }]
+        st.session_state.cv_chat_history = []
         
     except Exception as e:
         st.error(f"❌ Erreur: {e}")
@@ -1868,12 +1909,6 @@ def apply_cv_feedback(feedback: str):
     try:
         import json
         from utils.cv_generator import VALERIE_DATA_BASE, render_template
-        
-        # Ajouter le message utilisateur à l'historique
-        st.session_state.cv_chat_history.append({
-            'role': 'user',
-            'content': feedback
-        })
         
         llm = get_llm()
         
@@ -1905,7 +1940,7 @@ RÉPONDS UNIQUEMENT AVEC UN JSON VALIDE:
     "competences_prioritaires": ["Compétence1", "Compétence2", "Compétence3", "Compétence4", "Compétence5"],
     "mots_cles_offre": ["mot1", "mot2"],
     "conseil_personnalisation": "Explication courte de la modification appliquée",
-    "modification_appliquee": "Description de ce qui a été changé"
+    "modification_appliquee": "Description courte et précise de ce qui a été changé"
 }}
 ```"""
         
@@ -1934,28 +1969,30 @@ RÉPONDS UNIQUEMENT AVEC UN JSON VALIDE:
         
         html = render_template(cv_data)
         
+        # Incrémenter la version
+        st.session_state.cv_version = st.session_state.get('cv_version', 1) + 1
+        
+        # Ajouter à l'historique des modifications
+        modification_msg = new_customizations.get('modification_appliquee', new_customizations.get('conseil_personnalisation', 'Modifications appliquées'))
+        
+        if 'cv_modifications_history' not in st.session_state:
+            st.session_state.cv_modifications_history = []
+        
+        st.session_state.cv_modifications_history.append({
+            'version': st.session_state.cv_version,
+            'demande': feedback,
+            'resultat': modification_msg
+        })
+        
         # Mettre à jour le session state
         st.session_state.cv_html_preview = html
         st.session_state.cv_customizations = new_customizations
         st.session_state.cv_current_data = cv_data
         
-        # Ajouter la réponse de l'assistant
-        modification_msg = new_customizations.get('modification_appliquee', new_customizations.get('conseil_personnalisation', 'Modifications appliquées !'))
-        st.session_state.cv_chat_history.append({
-            'role': 'assistant',
-            'content': f"✅ {modification_msg}"
-        })
-        
     except json.JSONDecodeError as e:
-        st.session_state.cv_chat_history.append({
-            'role': 'assistant',
-            'content': f"❌ Erreur de parsing. Réessaie avec une demande plus simple."
-        })
+        st.error("❌ Erreur de parsing. Réessaie avec une demande plus simple.")
     except Exception as e:
-        st.session_state.cv_chat_history.append({
-            'role': 'assistant',
-            'content': f"❌ Erreur: {str(e)}"
-        })
+        st.error(f"❌ Erreur: {str(e)}")
 
 
 def save_cv_to_supabase(titre: str = None, entreprise: str = None, candidature_id: str = None, create_candidature: bool = False):

@@ -20,6 +20,17 @@
             --text-light: #ffffff;
             --bg-light: #f8f9fa;
             --border: #e0e0e0;
+            
+            /* Variables de densité - ajustables */
+            --font-size-base: {{font_size_base}}pt;
+            --font-size-small: {{font_size_small}}pt;
+            --font-size-tiny: {{font_size_tiny}}pt;
+            --spacing-section: {{spacing_section}}px;
+            --spacing-item: {{spacing_item}}px;
+            --spacing-inner: {{spacing_inner}}px;
+            --sidebar-padding: {{sidebar_padding}}px;
+            --main-padding: {{main_padding}}px;
+            --photo-size: {{photo_size}}px;
         }
 
         @page {
@@ -29,35 +40,38 @@
 
         body {
             font-family: 'Open Sans', sans-serif;
-            font-size: 10pt;
-            line-height: 1.4;
+            font-size: var(--font-size-base);
+            line-height: 1.35;
             color: var(--text-dark);
             background: white;
         }
 
         .cv-container {
             width: 210mm;
-            min-height: 297mm;
+            height: 297mm;
+            max-height: 297mm;
             margin: 0 auto;
             display: grid;
             grid-template-columns: 75mm 135mm;
+            overflow: hidden;
         }
 
         /* SIDEBAR GAUCHE */
         .sidebar {
             background: var(--primary);
             color: var(--text-light);
-            padding: 20px 15px;
+            padding: var(--sidebar-padding) 15px;
+            overflow: hidden;
         }
 
         .photo-container {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: var(--spacing-section);
         }
 
         .photo {
-            width: 100px;
-            height: 100px;
+            width: var(--photo-size);
+            height: var(--photo-size);
             border-radius: 50%;
             border: 3px solid var(--accent);
             object-fit: cover;
@@ -65,31 +79,36 @@
 
         .sidebar h2 {
             font-family: 'Montserrat', sans-serif;
-            font-size: 11pt;
+            font-size: calc(var(--font-size-base) + 1pt);
             font-weight: 600;
             color: var(--accent);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin: 20px 0 12px 0;
-            padding-bottom: 5px;
+            margin: var(--spacing-section) 0 var(--spacing-item) 0;
+            padding-bottom: 4px;
             border-bottom: 2px solid var(--accent);
         }
 
+        .sidebar h2:first-of-type {
+            margin-top: 0;
+        }
+
         .contact-info {
-            font-size: 9pt;
+            font-size: var(--font-size-small);
         }
 
         .contact-item {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 8px;
-            gap: 8px;
+            margin-bottom: var(--spacing-inner);
+            gap: 6px;
         }
 
         .contact-icon {
-            width: 16px;
+            width: 14px;
             text-align: center;
             flex-shrink: 0;
+            font-size: var(--font-size-tiny);
         }
 
         .contact-text {
@@ -98,34 +117,34 @@
 
         /* Formation dans sidebar */
         .formation-item {
-            margin-bottom: 12px;
+            margin-bottom: var(--spacing-item);
         }
 
         .formation-dates {
-            font-size: 8pt;
+            font-size: var(--font-size-tiny);
             color: var(--accent);
             font-weight: 600;
         }
 
         .formation-titre {
             font-weight: 600;
-            font-size: 9pt;
+            font-size: var(--font-size-small);
         }
 
         .formation-lieu {
-            font-size: 8pt;
+            font-size: var(--font-size-tiny);
             opacity: 0.9;
         }
 
         /* Stages */
         .stage-item {
-            margin-bottom: 10px;
-            font-size: 8.5pt;
+            margin-bottom: var(--spacing-item);
+            font-size: var(--font-size-tiny);
         }
 
         .stage-dates {
             color: var(--accent);
-            font-size: 8pt;
+            font-size: calc(var(--font-size-tiny) - 0.5pt);
         }
 
         .stage-lieu {
@@ -139,8 +158,8 @@
 
         /* Bénévolat */
         .benevolat-item {
-            margin-bottom: 10px;
-            font-size: 8.5pt;
+            margin-bottom: var(--spacing-item);
+            font-size: var(--font-size-tiny);
         }
 
         .benevolat-event {
@@ -150,8 +169,8 @@
 
         /* Centres d'intérêt */
         .interet-item {
-            margin-bottom: 8px;
-            font-size: 8.5pt;
+            margin-bottom: var(--spacing-inner);
+            font-size: var(--font-size-tiny);
         }
 
         .interet-highlight {
@@ -160,40 +179,41 @@
 
         /* CONTENU PRINCIPAL */
         .main-content {
-            padding: 25px 20px;
+            padding: var(--main-padding);
             background: white;
+            overflow: hidden;
         }
 
         /* Header */
         .header {
-            margin-bottom: 20px;
+            margin-bottom: var(--spacing-section);
             border-bottom: 3px solid var(--primary);
-            padding-bottom: 15px;
+            padding-bottom: var(--spacing-item);
         }
 
         .name {
             font-family: 'Montserrat', sans-serif;
-            font-size: 26pt;
+            font-size: calc(var(--font-size-base) * 2.4);
             font-weight: 700;
             color: var(--primary);
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         .title {
             font-family: 'Montserrat', sans-serif;
-            font-size: 13pt;
+            font-size: calc(var(--font-size-base) + 2pt);
             font-weight: 600;
             color: var(--primary-light);
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 12px;
+            margin-bottom: var(--spacing-item);
         }
 
         .accroche {
-            font-size: 10pt;
-            line-height: 1.5;
+            font-size: var(--font-size-base);
+            line-height: 1.4;
             color: var(--text-dark);
-            margin-bottom: 10px;
+            margin-bottom: var(--spacing-inner);
         }
 
         .accroche-highlight {
@@ -203,34 +223,34 @@
 
         .qualites {
             display: flex;
-            gap: 15px;
+            gap: var(--spacing-item);
             flex-wrap: wrap;
         }
 
         .qualite {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9pt;
+            font-size: var(--font-size-small);
             font-weight: 600;
             color: var(--primary);
-            padding: 4px 12px;
+            padding: 3px 10px;
             border: 2px solid var(--accent);
             border-radius: 20px;
         }
 
         /* Sections principales */
         .section {
-            margin-bottom: 18px;
+            margin-bottom: var(--spacing-section);
         }
 
         .section h2 {
             font-family: 'Montserrat', sans-serif;
-            font-size: 12pt;
+            font-size: calc(var(--font-size-base) + 1pt);
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 12px;
-            padding-bottom: 5px;
+            margin-bottom: var(--spacing-item);
+            padding-bottom: 4px;
             border-bottom: 2px solid var(--accent);
         }
 
@@ -238,45 +258,49 @@
         .experience-item {
             display: grid;
             grid-template-columns: 1fr auto;
-            gap: 10px;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
+            gap: 8px;
+            margin-bottom: var(--spacing-item);
+            padding-bottom: var(--spacing-inner);
             border-bottom: 1px solid var(--border);
         }
 
         .experience-item:last-child {
             border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
         .exp-entreprise {
             font-weight: 700;
-            font-size: 10pt;
+            font-size: var(--font-size-base);
             color: var(--primary);
         }
 
         .exp-poste {
-            font-size: 9.5pt;
+            font-size: var(--font-size-small);
             font-style: italic;
         }
 
         .exp-dates {
-            font-size: 9pt;
+            font-size: var(--font-size-small);
             color: var(--primary-light);
             font-weight: 600;
             text-align: right;
+            white-space: nowrap;
         }
 
         /* Compétences */
         .competences-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: var(--spacing-inner);
         }
 
         .competence-item {
-            font-size: 9pt;
-            padding-left: 15px;
+            font-size: var(--font-size-small);
+            padding-left: 12px;
             position: relative;
+            line-height: 1.3;
         }
 
         .competence-item::before {
@@ -301,6 +325,7 @@
             
             .cv-container {
                 page-break-inside: avoid;
+                page-break-after: avoid;
             }
         }
     </style>
@@ -429,4 +454,3 @@
     </div>
 </body>
 </html>
-

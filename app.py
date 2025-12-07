@@ -1271,9 +1271,16 @@ def render_optimiser_cv():
 
 
 def render_lettre_motivation():
-    """Page de génération de lettre de motivation."""
+    """Page de génération de lettre de motivation avec contextes pré-définis."""
+    from config.valerie_contextes import (
+        CONTEXTES_LETTRE_MOTIVATION, 
+        get_contextes_par_categorie, 
+        get_contexte_texte,
+        get_contextes_recommandes_pour_offre
+    )
+    
     st.markdown("## ✉️ Lettre de motivation")
-    st.markdown("Génère une lettre de motivation percutante et personnalisée.")
+    st.markdown("Génère une lettre de motivation percutante et ultra-personnalisée.")
     
     # Vérifier si une offre est déjà chargée
     if st.session_state.offre_actuelle:
@@ -1282,21 +1289,79 @@ def render_lettre_motivation():
     offre_text = st.text_area(
         "Offre d'emploi ciblée",
         value=st.session_state.offre_actuelle,
-        height=200,
+        height=180,
         placeholder="Colle l'offre d'emploi...",
         key="lettre_offre_input"
     )
     
-    # Contexte supplémentaire
-    st.markdown("### 💡 Contexte personnel (optionnel)")
-    contexte = st.text_area(
-        "Ajoute des éléments de contexte pour personnaliser ta lettre",
-        placeholder="Ex: Tu connais quelqu'un dans l'entreprise, tu as une motivation particulière, tu es disponible à une date précise...",
-        height=100,
-        key="lettre_contexte"
+    # =========================================================================
+    # CONTEXTES PRÉ-DÉFINIS SÉLECTIONNABLES
+    # =========================================================================
+    st.markdown("---")
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+                border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #10b981;">
+        <h4 style="margin: 0 0 8px 0; color: #34d399;">✨ Contextes personnalisés pré-chargés</h4>
+        <p style="margin: 0; font-size: 0.9rem; color: #94a3b8;">
+            Sélectionne les éléments de ton parcours à mettre en avant dans ta lettre.<br/>
+            <strong>Ces informations sont issues de ton CV, ton dossier CIP et tes posts LinkedIn.</strong>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Déterminer les contextes recommandés si une offre est présente
+    contextes_recommandes = []
+    if offre_text and len(offre_text.strip()) > 50:
+        contextes_recommandes = get_contextes_recommandes_pour_offre(offre_text)
+        st.info(f"💡 **Suggestions automatiques basées sur l'offre :** {len(contextes_recommandes)} contextes pré-sélectionnés")
+    
+    # Initialiser les sélections dans session_state
+    if 'lettre_contextes_selectionnes' not in st.session_state:
+        st.session_state.lettre_contextes_selectionnes = contextes_recommandes if contextes_recommandes else []
+    
+    # Afficher les contextes par catégorie
+    categories = get_contextes_par_categorie()
+    selected_contextes = []
+    
+    # Créer les colonnes pour les catégories
+    col_left, col_right = st.columns(2)
+    
+    categories_list = list(categories.items())
+    for i, (cat_name, cat_contextes) in enumerate(categories_list):
+        with col_left if i % 2 == 0 else col_right:
+            with st.expander(f"📁 {cat_name}", expanded=(cat_name in ["Parcours", "Sport & Valeurs"])):
+                for key, ctx in cat_contextes:
+                    is_recommended = key in contextes_recommandes
+                    default_value = is_recommended or key in st.session_state.lettre_contextes_selectionnes
+                    
+                    # Ajouter une icône ✨ si recommandé
+                    label = ctx["label"]
+                    if is_recommended:
+                        label = f"{label} ✨"
+                    
+                    if st.checkbox(label, value=default_value, key=f"ctx_{key}"):
+                        selected_contextes.append(key)
+    
+    # Mettre à jour la session
+    st.session_state.lettre_contextes_selectionnes = selected_contextes
+    
+    # Afficher un résumé des contextes sélectionnés
+    if selected_contextes:
+        st.markdown(f"**{len(selected_contextes)} contexte(s) sélectionné(s)** pour enrichir ta lettre")
+    
+    # Contexte SUPPLÉMENTAIRE libre
+    st.markdown("---")
+    st.markdown("### ➕ Contexte supplémentaire (optionnel)")
+    contexte_libre = st.text_area(
+        "Ajoute des éléments spécifiques non listés ci-dessus",
+        placeholder="Ex: Tu connais quelqu'un dans l'entreprise, tu as visité leurs locaux, tu as une motivation très spécifique pour CE poste...",
+        height=80,
+        key="lettre_contexte_libre"
     )
     
     # Style de lettre
+    st.markdown("---")
+    st.markdown("### 🎨 Style de la lettre")
     col1, col2 = st.columns(2)
     with col1:
         ton = st.selectbox(
@@ -1311,6 +1376,7 @@ def render_lettre_motivation():
             index=0
         )
     
+    # Bouton de génération
     if st.button("✨ Générer la lettre", type="primary", use_container_width=True):
         if offre_text and len(offre_text.strip()) > 50:
             st.session_state.offre_actuelle = offre_text
@@ -1318,10 +1384,28 @@ def render_lettre_motivation():
             with st.spinner("🤖 Rédaction de la lettre en cours..."):
                 llm = get_llm()
                 
+                # Compiler les contextes sélectionnés
+                contexte_compile = get_contexte_texte(selected_contextes)
+                
+                # Construire le contexte complet
                 contexte_prompt = f"""
-Contexte personnel : {contexte if contexte else "Non spécifié"}
-Ton souhaité : {ton}
+=== CONTEXTE PERSONNEL RICHE DE VALÉRIE ===
+(Ces éléments sont vérifiés et issus de son parcours réel)
+
+{contexte_compile if contexte_compile else "Aucun contexte pré-défini sélectionné."}
+
+=== ÉLÉMENTS SUPPLÉMENTAIRES ===
+{contexte_libre if contexte_libre else "Aucun élément supplémentaire."}
+
+=== STYLE SOUHAITÉ ===
+Ton : {ton}
 Longueur : {longueur}
+
+INSTRUCTIONS IMPORTANTES :
+- Utilise les contextes personnels ci-dessus pour enrichir la lettre de façon NATURELLE
+- Ne liste pas ces éléments, intègre-les subtilement dans l'argumentaire
+- La lettre doit être authentique et refléter la personnalité de Valérie
+- Fais ressortir sa reconversion réussie et sa maturité professionnelle
 """
                 
                 prompt = PROMPT_LETTRE_MOTIVATION.format(
@@ -1341,24 +1425,45 @@ Longueur : {longueur}
             st.markdown("---")
             st.markdown("### ✨ Ta lettre de motivation")
             
+            # Afficher les contextes utilisés
+            if selected_contextes:
+                with st.expander("📌 Contextes utilisés pour cette lettre", expanded=False):
+                    for key in selected_contextes:
+                        if key in CONTEXTES_LETTRE_MOTIVATION:
+                            ctx = CONTEXTES_LETTRE_MOTIVATION[key]
+                            st.markdown(f"• **{ctx['label']}**")
+            
             st.markdown(result)
             
             # Options
             st.markdown("---")
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             with col1:
                 st.download_button(
-                    "📥 Télécharger la lettre",
+                    "📥 Télécharger TXT",
                     data=result,
                     file_name=f"LM_Valerie_Jasica_{datetime.now().strftime('%Y%m%d')}.txt",
                     mime="text/plain",
                     use_container_width=True
                 )
             with col2:
-                if st.button("🔄 Regénérer avec un autre angle", use_container_width=True):
+                try:
+                    from utils.document_generator import generate_lettre_docx
+                    docx_buffer = generate_lettre_docx(result)
+                    st.download_button(
+                        "📥 Télécharger WORD",
+                        data=docx_buffer,
+                        file_name=f"LM_Valerie_Jasica_{datetime.now().strftime('%Y%m%d')}.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        use_container_width=True
+                    )
+                except Exception:
+                    pass
+            with col3:
+                if st.button("🔄 Regénérer", use_container_width=True):
                     st.rerun()
         else:
-            st.warning("⚠️ Merci de coller une offre d'emploi valide")
+            st.warning("⚠️ Merci de coller une offre d'emploi valide (au moins 50 caractères)")
 
 
 def render_preparation_entretien():

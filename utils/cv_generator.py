@@ -1,13 +1,14 @@
 """
 Générateur de CV HTML → PDF pour Valérie Jasica
 Permet de personnaliser le CV en fonction de chaque offre d'emploi
+Avec système intelligent de densité pour tenir sur 1 page
 """
 import os
 import io
 import re
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import base64
 
 
@@ -94,6 +95,145 @@ VALERIE_DATA_BASE = {
 }
 
 
+# ============================================================================
+# SYSTÈME DE DENSITÉ - Pour tenir sur 1 page
+# ============================================================================
+
+# Presets de densité (0 = très compact, 100 = normal/espacé)
+DENSITY_PRESETS = {
+    # Format: (font_base, font_small, font_tiny, spacing_section, spacing_item, spacing_inner, sidebar_padding, main_padding, photo_size)
+    "ultra_compact": (8.5, 7.5, 6.5, 10, 6, 4, 12, 15, 70),
+    "compact": (9, 8, 7, 12, 8, 5, 15, 18, 80),
+    "normal": (10, 9, 8, 16, 10, 6, 20, 22, 90),
+    "comfortable": (10, 9, 8.5, 18, 12, 8, 20, 25, 100),
+}
+
+
+def calculate_content_density(data: Dict) -> str:
+    """
+    Calcule la densité de contenu et retourne le preset recommandé.
+    
+    Scoring basé sur :
+    - Nombre d'expériences
+    - Nombre de compétences
+    - Nombre de stages
+    - Longueur de l'accroche
+    - Section communication activée
+    """
+    score = 0
+    
+    # Expériences (poids important)
+    n_exp = len(data.get("experiences", []))
+    if n_exp >= 9:
+        score += 40
+    elif n_exp >= 7:
+        score += 30
+    elif n_exp >= 5:
+        score += 20
+    else:
+        score += 10
+    
+    # Compétences
+    n_comp = len(data.get("competences", []))
+    if n_comp >= 10:
+        score += 25
+    elif n_comp >= 8:
+        score += 20
+    elif n_comp >= 6:
+        score += 15
+    else:
+        score += 10
+    
+    # Stages (sidebar)
+    n_stages = len(data.get("stages", []))
+    if n_stages >= 6:
+        score += 20
+    elif n_stages >= 4:
+        score += 15
+    else:
+        score += 10
+    
+    # Formations
+    n_form = len(data.get("formations", []))
+    score += n_form * 3
+    
+    # Accroche (longueur)
+    accroche_len = len(data.get("accroche", ""))
+    if accroche_len > 200:
+        score += 15
+    elif accroche_len > 150:
+        score += 10
+    
+    # Section communication
+    if data.get("section_communication"):
+        score += 15
+    
+    # Déterminer le preset
+    if score >= 90:
+        return "ultra_compact"
+    elif score >= 70:
+        return "compact"
+    elif score >= 50:
+        return "normal"
+    else:
+        return "comfortable"
+
+
+def get_density_values(density: int = None, data: Dict = None) -> Dict[str, float]:
+    """
+    Retourne les valeurs CSS pour une densité donnée.
+    
+    Args:
+        density: 0-100 (0 = ultra compact, 100 = comfortable)
+                 None = auto-calcul basé sur le contenu
+        data: Données du CV pour auto-calcul
+        
+    Returns:
+        Dict avec les valeurs CSS
+    """
+    if density is None and data:
+        # Auto-calcul
+        preset_name = calculate_content_density(data)
+        preset = DENSITY_PRESETS[preset_name]
+    elif density is not None:
+        # Interpolation entre presets
+        if density <= 25:
+            preset = DENSITY_PRESETS["ultra_compact"]
+        elif density <= 50:
+            # Interpoler entre ultra_compact et compact
+            t = (density - 25) / 25
+            p1 = DENSITY_PRESETS["ultra_compact"]
+            p2 = DENSITY_PRESETS["compact"]
+            preset = tuple(p1[i] + t * (p2[i] - p1[i]) for i in range(len(p1)))
+        elif density <= 75:
+            # Interpoler entre compact et normal
+            t = (density - 50) / 25
+            p1 = DENSITY_PRESETS["compact"]
+            p2 = DENSITY_PRESETS["normal"]
+            preset = tuple(p1[i] + t * (p2[i] - p1[i]) for i in range(len(p1)))
+        else:
+            # Interpoler entre normal et comfortable
+            t = (density - 75) / 25
+            p1 = DENSITY_PRESETS["normal"]
+            p2 = DENSITY_PRESETS["comfortable"]
+            preset = tuple(p1[i] + t * (p2[i] - p1[i]) for i in range(len(p1)))
+    else:
+        # Default: normal
+        preset = DENSITY_PRESETS["normal"]
+    
+    return {
+        "font_size_base": round(preset[0], 1),
+        "font_size_small": round(preset[1], 1),
+        "font_size_tiny": round(preset[2], 1),
+        "spacing_section": round(preset[3]),
+        "spacing_item": round(preset[4]),
+        "spacing_inner": round(preset[5]),
+        "sidebar_padding": round(preset[6]),
+        "main_padding": round(preset[7]),
+        "photo_size": round(preset[8]),
+    }
+
+
 def get_photo_base64(photo_path: str = None) -> str:
     """Convertit la photo en base64 pour l'inclure dans le HTML."""
     if photo_path is None:
@@ -107,10 +247,14 @@ def get_photo_base64(photo_path: str = None) -> str:
         return ""
 
 
-def render_template(data: Dict) -> str:
+def render_template(data: Dict, density: int = None) -> str:
     """
     Génère le HTML du CV à partir des données.
     Utilise un mini moteur de template maison.
+    
+    Args:
+        data: Données du CV
+        density: 0-100 pour ajustement manuel, None pour auto
     """
     template_path = Path(__file__).parent.parent / "templates" / "cv_template.html"
     
@@ -119,6 +263,11 @@ def render_template(data: Dict) -> str:
     
     # Ajouter la photo en base64
     data["photo_url"] = get_photo_base64()
+    
+    # Calculer et injecter les valeurs de densité
+    density_values = get_density_values(density=density, data=data)
+    for key, value in density_values.items():
+        html = html.replace(f"{{{{{key}}}}}", str(value))
     
     # Remplacer les variables simples {{variable}}
     for key, value in data.items():
@@ -227,7 +376,7 @@ def render_template(data: Dict) -> str:
     return html
 
 
-def generate_cv_html(customizations: Dict = None) -> str:
+def generate_cv_html(customizations: Dict = None, density: int = None) -> str:
     """
     Génère le HTML du CV avec personnalisations optionnelles.
     
@@ -236,7 +385,13 @@ def generate_cv_html(customizations: Dict = None) -> str:
             - accroche: Nouvelle accroche
             - qualites: Liste de qualités réordonnées
             - competences: Liste de compétences réordonnées
-            - experiences_highlight: Liste d'entreprises à mettre en premier
+            - experiences: Liste d'expériences modifiées
+            - formations: Liste de formations modifiées
+            - stages: Liste de stages modifiés
+            - benevolat: Liste de bénévolats modifiés
+            - interets: Liste d'intérêts modifiés
+            - section_communication: bool
+        density: 0-100 pour ajustement de la densité (None = auto)
             
     Returns:
         HTML complet du CV
@@ -256,26 +411,53 @@ def generate_cv_html(customizations: Dict = None) -> str:
         if "competences" in customizations:
             data["competences"] = customizations["competences"]
         
-        # Réordonner les expériences si nécessaire
+        # Expériences modifiées
+        if "experiences" in customizations:
+            data["experiences"] = customizations["experiences"]
+        
+        # Formations modifiées
+        if "formations" in customizations:
+            data["formations"] = customizations["formations"]
+        
+        # Stages modifiés
+        if "stages" in customizations:
+            data["stages"] = customizations["stages"]
+        
+        # Bénévolat modifié
+        if "benevolat" in customizations:
+            data["benevolat"] = customizations["benevolat"]
+        
+        # Intérêts modifiés
+        if "interets" in customizations:
+            data["interets"] = customizations["interets"]
+        
+        # Section communication
+        if "section_communication" in customizations:
+            data["section_communication"] = customizations["section_communication"]
+        
+        if "competences_com" in customizations:
+            data["competences_com"] = customizations["competences_com"]
+        
+        # Réordonner les expériences si nécessaire (legacy)
         if "experiences_order" in customizations:
             order = customizations["experiences_order"]
-            # Réordonner selon les indices fournis
             data["experiences"] = [data["experiences"][i] for i in order if i < len(data["experiences"])]
     
-    return render_template(data)
+    return render_template(data, density=density)
 
 
-def generate_cv_pdf(customizations: Dict = None) -> io.BytesIO:
+def generate_cv_pdf(customizations: Dict = None, density: int = None) -> io.BytesIO:
     """
     Génère un PDF du CV.
     
     Args:
         customizations: Personnalisations à appliquer
+        density: 0-100 pour ajustement de la densité (None = auto)
         
     Returns:
         BytesIO contenant le PDF
     """
-    html = generate_cv_html(customizations)
+    html = generate_cv_html(customizations, density=density)
     
     try:
         from weasyprint import HTML, CSS
@@ -290,12 +472,32 @@ def generate_cv_pdf(customizations: Dict = None) -> io.BytesIO:
         raise ImportError("weasyprint n'est pas installé. Installez-le avec: pip install weasyprint")
 
 
-def preview_cv_html(customizations: Dict = None) -> str:
+def preview_cv_html(customizations: Dict = None, density: int = None) -> str:
     """
     Génère une prévisualisation HTML du CV.
     Utile pour l'affichage dans Streamlit avec st.components.html()
     """
-    return generate_cv_html(customizations)
+    return generate_cv_html(customizations, density=density)
+
+
+def get_density_recommendation(data: Dict) -> Tuple[str, int, str]:
+    """
+    Retourne une recommandation de densité avec explication.
+    
+    Returns:
+        Tuple: (preset_name, density_value, explanation)
+    """
+    preset = calculate_content_density(data)
+    
+    explanations = {
+        "ultra_compact": (15, "🔴 Beaucoup de contenu → Mode ultra-compact recommandé"),
+        "compact": (40, "🟠 Contenu dense → Mode compact recommandé"),
+        "normal": (65, "🟢 Contenu équilibré → Mode normal"),
+        "comfortable": (85, "🟢 Peu de contenu → Espacement confortable"),
+    }
+    
+    density_val, explanation = explanations[preset]
+    return preset, density_val, explanation
 
 
 # ============================================================================
@@ -336,14 +538,15 @@ def adapt_cv_for_offer(
 
 
 if __name__ == "__main__":
-    # Test : générer le CV par défaut
-    html = generate_cv_html()
-    
-    output_path = Path(__file__).parent.parent / "exports" / "cv_preview.html"
-    output_path.parent.mkdir(exist_ok=True)
-    
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(html)
-    
-    print(f"✅ CV HTML généré : {output_path}")
-
+    # Test : générer le CV par défaut avec différentes densités
+    for density in [None, 25, 50, 75]:
+        html = generate_cv_html(density=density)
+        
+        suffix = f"_d{density}" if density else "_auto"
+        output_path = Path(__file__).parent.parent / "exports" / f"cv_preview{suffix}.html"
+        output_path.parent.mkdir(exist_ok=True)
+        
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(html)
+        
+        print(f"✅ CV HTML généré (densité={density}): {output_path}")

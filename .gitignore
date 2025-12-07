@@ -1,0 +1,38 @@
+# Environnement Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.so
+
+# Variables d'environnement (IMPORTANT: ne jamais commiter les clés API!)
+.env
+.env.local
+.env.*.local
+
+# Streamlit
+.streamlit/secrets.toml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Exports temporaires
+exports/
+*.pdf
+*.docx
+
+# Données locales
+data/
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+.playwright-mcp/

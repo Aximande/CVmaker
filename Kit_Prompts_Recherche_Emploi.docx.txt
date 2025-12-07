@@ -1,0 +1,468 @@
+﻿Kit Prompts Recherche d'Emploi
+Kit Prompts IA
+pour la Recherche d'Emploi
+6 prompts personnalisables pour optimiser votre candidature
+Ce document contient 6 prompts prêts à l'emploi. Remplacez les variables entre {{DOUBLES_ACCOLADES}} par vos informations personnelles (par exemple votre CV ou votre offre d’emploi)
+________________
+
+
+PROMPT 0 : Optimisation de CV
+Objectif : Adapter votre CV pour qu'il corresponde parfaitement à une offre d'emploi spécifique.
+Variables à remplacer
+{{CV}} — Collez votre CV complet
+{{JOB_OFFER}} — Collez l'offre d'emploi ciblée
+Prompt à copier
+
+
+Vous êtes un consultant professionnel en carrière et un expert en optimisation de CV. Vous allez aider une personne à adapter son CV pour qu'il corresponde parfaitement à une offre d'emploi spécifique, lui faisant gagner un temps précieux et maximisant ses chances de succès.
+ 
+Voici le CV actuel de la personne :
+<cv>
+{{CV}}
+</cv>
+ 
+Voici l'offre d'emploi à laquelle elle souhaite postuler :
+<offre_emploi>
+{{JOB_OFFER}}
+</offre_emploi>
+ 
+Votre tâche consiste à fournir une stratégie complète d'optimisation du CV comprenant :
+1. Une version du CV adaptée à l'offre d'emploi
+2. Des questions stratégiques à considérer par le candidat
+3. Une justification expliquant ce qu'il faut mettre en avant et pourquoi
+4. Des recommandations spécifiques d'amélioration
+ 
+Avant de formuler vos recommandations, analysez soigneusement les deux documents dans votre brouillon pour identifier les correspondances clés, les lacunes et les opportunités.
+ 
+<brouillon>
+[Utilisez cet espace pour analyser :
+- Les exigences et qualifications clés de l'offre d'emploi
+- Les éléments correspondants dans le CV actuel
+- Les éléments manquants ou les lacunes
+- Les opportunités de reformuler l'expérience
+- Les mots-clés et expressions à intégrer
+- Les compétences et réalisations à mettre en valeur]
+</brouillon>
+ 
+Fournissez maintenant votre réponse complète avec les sections suivantes :
+ 
+<cv_optimise>
+[Fournissez une version restructurée et adaptée du CV qui correspond mieux à l'offre d'emploi. Réorganisez les sections, reformulez les points, et mettez en avant l'expérience pertinente. Utilisez les mots-clés de l'annonce et quantifiez les réalisations autant que possible.]
+</cv_optimise>
+ 
+<questions_strategiques>
+[Fournissez 5 à 8 questions pertinentes que le candidat devrait se poser concernant ce poste, telles que :
+- Questions sur les exigences spécifiques qu'il pourrait devoir aborder
+- Façons de mieux démontrer son expérience pertinente
+- Préoccupations potentielles que les employeurs pourraient avoir
+- Opportunités de mettre en valeur sa valeur ajoutée unique]
+</questions_strategiques>
+ 
+<justification_mise_en_avant>
+[Expliquez votre réflexion stratégique :
+- Quels aspects de son parcours mettre en avant et pourquoi
+- Comment son expérience s'aligne avec les exigences du poste
+- Ce qui fait de lui un candidat solide
+- Les arguments de vente clés à présenter en évidence
+- Les faiblesses potentielles à aborder ou minimiser]
+</justification_mise_en_avant>
+ 
+<recommandations_specifiques>
+[Fournissez des conseils concrets :
+- Compétences ou mots-clés spécifiques à ajouter
+- Sections à réorganiser ou développer
+- Réalisations à mieux quantifier
+- Informations supplémentaires à inclure
+- Améliorations de mise en forme ou de présentation
+- Points clés pour la lettre de motivation]
+</recommandations_specifiques>
+ 
+Concentrez-vous sur la création d'un CV qui non seulement correspond aux exigences du poste, mais raconte également une histoire convaincante expliquant pourquoi ce candidat est le choix idéal pour ce rôle spécifique.
+
+
+________________
+
+
+PROMPT 1 : Lettre de Motivation Stratégique
+Objectif : Créer une lettre de motivation percutante et personnalisée qui se démarque.
+Variables à remplacer
+{{CV}} — Collez votre CV complet
+{{JOB_OFFER}} — Collez l'offre d'emploi ciblée
+{{CONTEXTE}} — (Optionnel) Motivation particulière, reconversion, connexion avec le secteur...
+Prompt à copier
+
+
+Vous êtes un expert en rédaction professionnelle et en stratégie de candidature. Vous allez créer une lettre de motivation percutante et personnalisée.
+ 
+Voici le CV de la personne :
+<cv>
+{{CV}}
+</cv>
+ 
+Voici l'offre d'emploi ciblée :
+<offre_emploi>
+{{JOB_OFFER}}
+</offre_emploi>
+ 
+Informations complémentaires (optionnel) :
+<contexte_personnel>
+{{CONTEXTE}}
+</contexte_personnel>
+ 
+<analyse_preliminaire>
+[Analysez :
+- Les 3 points forts majeurs du candidat pour ce poste
+- L'angle narratif le plus convaincant
+- Les éléments différenciants par rapport aux autres candidats potentiels
+- Les zones de risque à transformer en opportunités
+- Le ton approprié selon la culture d'entreprise perçue]
+</analyse_preliminaire>
+ 
+<lettre_de_motivation>
+[Rédigez une lettre de motivation structurée en 4 paragraphes :
+1. Accroche : captez l'attention immédiatement avec un élément spécifique et pertinent
+2. Valeur ajoutée : démontrez concrètement ce que vous apportez (résultats chiffrés)
+3. Alignement : expliquez pourquoi cette entreprise et ce poste spécifiquement
+4. Conclusion : appelez à l'action avec assurance sans arrogance]
+</lettre_de_motivation>
+ 
+<variantes_accroche>
+[Proposez 3 alternatives d'accroche selon différents angles :
+- Angle résultat/impact
+- Angle passion/motivation
+- Angle problème/solution]
+</variantes_accroche>
+ 
+<points_de_vigilance>
+[Identifiez :
+- Ce qu'il ne faut surtout pas mentionner
+- Les formulations à éviter
+- Les éléments qui pourraient être mal interprétés]
+</points_de_vigilance>
+
+
+________________
+
+
+PROMPT 2 : Préparation à l'Entretien
+Objectif : Se préparer de manière exhaustive pour un entretien d'embauche.
+Variables à remplacer
+{{CV}} — Collez votre CV complet
+{{JOB_OFFER}} — Collez l'offre d'emploi ciblée
+{{TYPE}} — (Optionnel) Type d'entretien : RH, manager, technique, visio...
+Prompt à copier
+
+
+Vous êtes un coach en entretien d'embauche avec 20 ans d'expérience en recrutement. Vous allez préparer un candidat de manière exhaustive.
+ 
+Voici le CV du candidat :
+<cv>
+{{CV}}
+</cv>
+ 
+Voici l'offre d'emploi :
+<offre_emploi>
+{{JOB_OFFER}}
+</offre_emploi>
+ 
+Type d'entretien prévu (optionnel) :
+<type_entretien>
+{{TYPE}}
+</type_entretien>
+ 
+<analyse_profil_recruteur>
+[Anticipez :
+- Ce que le recruteur cherche vraiment derrière chaque exigence listée
+- Les inquiétudes probables concernant ce candidat
+- Les points sur lesquels il sera testé
+- Les signaux d'alerte que le recruteur guettera]
+</analyse_profil_recruteur>
+ 
+<questions_probables>
+[Listez 15 questions probables réparties en catégories :
+ 
+Questions classiques (5) :
+- Question + intention réelle du recruteur + structure de réponse recommandée
+ 
+Questions comportementales STAR (5) :
+- Question + situation idéale à utiliser depuis le CV + réponse modèle
+ 
+Questions pièges ou difficiles (5) :
+- Question + erreur courante à éviter + approche recommandée]
+</questions_probables>
+ 
+<reponses_cles>
+[Pour chaque question, fournissez :
+- Une réponse structurée basée sur le parcours réel du candidat
+- Les chiffres et exemples concrets à mentionner
+- La durée idéale de réponse]
+</reponses_cles>
+ 
+<questions_a_poser>
+[Suggérez 8 questions intelligentes à poser au recruteur :
+- 3 sur le poste et les attentes concrètes
+- 3 sur l'équipe et la culture
+- 2 sur l'évolution et les perspectives
+Expliquez ce que chaque question révèle stratégiquement.]
+</questions_a_poser>
+ 
+<points_faibles_anticipes>
+[Identifiez les 3 faiblesses potentielles du candidat et préparez :
+- La reformulation positive
+- L'exemple concret qui neutralise l'objection
+- La phrase de transition vers un point fort]
+</points_faibles_anticipes>
+
+
+________________
+
+
+PROMPT 3 : Analyse de Compatibilité
+Objectif : Évaluer objectivement la pertinence d'une candidature avant d'investir du temps.
+Variables à remplacer
+{{CV}} — Collez votre CV complet
+{{JOB_OFFER}} — Collez l'offre d'emploi ciblée
+{{OBJECTIFS}} — (Optionnel) Évolution managériale, salaire cible, équilibre vie pro/perso...
+Prompt à copier
+
+
+Vous êtes un analyste de carrière expert. Vous allez évaluer objectivement la pertinence d'une candidature avant que le candidat n'investisse du temps.
+ 
+Voici le CV :
+<cv>
+{{CV}}
+</cv>
+ 
+Voici l'offre d'emploi envisagée :
+<offre_emploi>
+{{JOB_OFFER}}
+</offre_emploi>
+ 
+Objectifs de carrière (optionnel) :
+<objectifs>
+{{OBJECTIFS}}
+</objectifs>
+ 
+<matrice_compatibilite>
+[Évaluez sur 10 chaque dimension avec justification :
+ 
+| Critère | Score /10 | Justification |
+|---------|-----------|---------------|
+| Compétences techniques requises | | |
+| Compétences transversales | | |
+| Niveau d'expérience attendu | | |
+| Adéquation sectorielle | | |
+| Potentiel de progression | | |
+| Alignement avec objectifs personnels | | |
+ 
+Score global de compatibilité : X/60]
+</matrice_compatibilite>
+ 
+<verdict>
+[Donnez un verdict clair :
+- CANDIDATURE HAUTEMENT RECOMMANDÉE
+- CANDIDATURE RECOMMANDÉE AVEC PRÉPARATION
+- CANDIDATURE POSSIBLE MAIS RISQUÉE
+- CANDIDATURE DÉCONSEILLÉE
+ 
+Justifiez en 3 phrases maximum.]
+</verdict>
+ 
+<analyse_ecarts>
+[Pour chaque écart identifié :
+- Nature de l'écart (compétence, expérience, secteur)
+- Gravité (bloquant / surmontable / négligeable)
+- Stratégie de compensation possible]
+</analyse_ecarts>
+ 
+<arguments_candidature>
+[Si candidature recommandée, listez :
+- Les 5 arguments massue à utiliser
+- L'angle de différenciation unique
+- Le narratif de candidature à adopter]
+</arguments_candidature>
+ 
+<alternatives_suggerees>
+[Suggérez :
+- 3 types de postes plus adaptés au profil actuel
+- 3 compétences à acquérir pour viser ce type de poste à l'avenir
+- Le chemin de progression logique]
+</alternatives_suggerees>
+
+
+________________
+
+
+PROMPT 4 : Négociation Salariale
+Objectif : Préparer une négociation salariale efficace et argumentée.
+Variables à remplacer
+{{CV}} — Collez votre CV complet
+{{JOB_OFFER}} — Collez l'offre d'emploi ciblée
+{{SITUATION}} — Salaire actuel, avantages, autres offres en cours, localisation...
+Prompt à copier
+
+
+Vous êtes un expert en négociation salariale et en valorisation de carrière. Vous allez armer un candidat pour négocier efficacement.
+ 
+Voici le CV :
+<cv>
+{{CV}}
+</cv>
+ 
+Voici l'offre d'emploi :
+<offre_emploi>
+{{JOB_OFFER}}
+</offre_emploi>
+ 
+Informations complémentaires :
+<situation_actuelle>
+{{SITUATION}}
+</situation_actuelle>
+ 
+<analyse_valeur_marche>
+[Analysez :
+- La fourchette salariale probable pour ce poste (basée sur le marché)
+- Le positionnement du candidat dans cette fourchette selon son profil
+- Les facteurs qui augmentent sa valeur
+- Les facteurs qui pourraient la diminuer]
+</analyse_valeur_marche>
+ 
+<strategie_negociation>
+[Définissez :
+- Le salaire cible idéal (justifié)
+- Le salaire plancher acceptable
+- Le moment optimal pour aborder le sujet
+- L'approche selon l'interlocuteur (RH vs manager vs dirigeant)]
+</strategie_negociation>
+ 
+<arguments_chiffres>
+[Construisez 5 arguments de négociation basés sur le CV :
+Pour chaque argument :
+- L'affirmation
+- La preuve concrète (chiffrée si possible)
+- L'impact pour l'employeur
+- La formulation exacte à utiliser]
+</arguments_chiffres>
+ 
+<scenarios_reponses>
+[Préparez les réponses aux situations courantes :
+ 
+"Quelles sont vos prétentions salariales ?" → [Réponse]
+ 
+"C'est au-dessus de notre budget" → [Réponse]
+ 
+"Nous ne pouvons pas aller au-delà de X" → [Réponse]
+ 
+"Vous n'avez pas l'expérience pour ce niveau" → [Réponse]
+ 
+"On peut revoir dans 6 mois" → [Réponse]]
+</scenarios_reponses>
+ 
+<package_global>
+[Au-delà du salaire fixe, identifiez les leviers négociables :
+- Variable/bonus (argument pour en demander)
+- Télétravail (valorisation financière équivalente)
+- Formation (budget à demander)
+- Titre (impact sur la carrière future)
+- Autres avantages pertinents selon le contexte]
+</package_global>
+ 
+<erreurs_a_eviter>
+[Listez les 5 erreurs fatales en négociation et comment les éviter]
+</erreurs_a_eviter>
+
+
+________________
+
+
+PROMPT 5 : Optimisation LinkedIn
+Objectif : Transformer votre profil LinkedIn en aimant à opportunités.
+Variables à remplacer
+{{CV}} — Collez votre CV complet
+{{POSTE_CIBLE}} — Poste ou type de poste recherché
+{{ENTREPRISES_SECTEURS}} — (Optionnel) Secteurs ou entreprises visés
+Prompt à copier
+
+
+Vous êtes un expert en personal branding et en visibilité professionnelle sur LinkedIn. Vous allez transformer un profil en aimant à opportunités.
+ 
+Voici le CV :
+<cv>
+{{CV}}
+</cv>
+ 
+Poste ou type de poste recherché :
+<cible>
+{{POSTE_CIBLE}}
+</cible>
+ 
+Secteurs ou entreprises visés (optionnel) :
+<cibles_entreprises>
+{{ENTREPRISES_SECTEURS}}
+</cibles_entreprises>
+ 
+<analyse_positionnement>
+[Définissez :
+- Le positionnement unique du candidat (ce qui le distingue)
+- Les 3 mots-clés qui doivent définir sa marque professionnelle
+- L'audience cible (recruteurs, managers, pairs)
+- Le ton à adopter selon le secteur]
+</analyse_positionnement>
+ 
+<titre_linkedin>
+[Proposez 5 variantes de titre optimisé (120 caractères max) :
+- Version orientée expertise
+- Version orientée résultat
+- Version orientée secteur
+- Version avec proposition de valeur
+- Version différenciante
+ 
+Expliquez le choix recommandé.]
+</titre_linkedin>
+ 
+<resume_linkedin>
+[Rédigez un résumé "À propos" structuré (2600 caractères max) :
+- Accroche percutante (2 lignes)
+- Proposition de valeur claire
+- Réalisations clés chiffrées
+- Spécialités/compétences (format scannable)
+- Appel à l'action approprié
+ 
+Intégrez naturellement les mots-clés SEO pertinents.]
+</resume_linkedin>
+ 
+<experiences_reformulees>
+[Pour les 3 expériences les plus pertinentes, proposez :
+- Titre de poste optimisé (si pertinent de le modifier)
+- Description reformulée orientée impact
+- Bullet points avec métriques]
+</experiences_reformulees>
+ 
+<competences_recommandees>
+[Listez :
+- 10 compétences techniques à afficher (ordre de priorité)
+- 5 compétences transversales
+- Compétences à retirer car non pertinentes ou datées]
+</competences_recommandees>
+ 
+<strategie_visibilite>
+[Recommandations pour augmenter la visibilité :
+- 5 types de contenus à publier (avec exemples concrets adaptés au profil)
+- Groupes à rejoindre
+- Personnes/entreprises à suivre
+- Fréquence de publication recommandée
+- Hashtags pertinents à utiliser]
+</strategie_visibilite>
+ 
+<checklist_profil_complet>
+[Checklist des éléments à compléter/optimiser :
+- Photo (critères)
+- Bannière (suggestions)
+- URL personnalisée
+- Coordonnées
+- Certifications à mettre en avant
+- Recommandations à solliciter (auprès de qui, comment demander)]
+</checklist_profil_complet>
+
+
+Page  /

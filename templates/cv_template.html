@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV - Valérie Jasica</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a5f;
+            --primary-light: #2d5a8a;
+            --accent: #c9a227;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --bg-light: #f8f9fa;
+            --border: #e0e0e0;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: var(--text-dark);
+            background: white;
+        }
+
+        .cv-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 75mm 135mm;
+        }
+
+        /* SIDEBAR GAUCHE */
+        .sidebar {
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 20px 15px;
+        }
+
+        .photo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            object-fit: cover;
+        }
+
+        .sidebar h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11pt;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 0 12px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .contact-info {
+            font-size: 9pt;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .contact-icon {
+            width: 16px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .contact-text {
+            word-break: break-word;
+        }
+
+        /* Formation dans sidebar */
+        .formation-item {
+            margin-bottom: 12px;
+        }
+
+        .formation-dates {
+            font-size: 8pt;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .formation-titre {
+            font-weight: 600;
+            font-size: 9pt;
+        }
+
+        .formation-lieu {
+            font-size: 8pt;
+            opacity: 0.9;
+        }
+
+        /* Stages */
+        .stage-item {
+            margin-bottom: 10px;
+            font-size: 8.5pt;
+        }
+
+        .stage-dates {
+            color: var(--accent);
+            font-size: 8pt;
+        }
+
+        .stage-lieu {
+            font-weight: 600;
+        }
+
+        .stage-mission {
+            font-style: italic;
+            opacity: 0.9;
+        }
+
+        /* Bénévolat */
+        .benevolat-item {
+            margin-bottom: 10px;
+            font-size: 8.5pt;
+        }
+
+        .benevolat-event {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        /* Centres d'intérêt */
+        .interet-item {
+            margin-bottom: 8px;
+            font-size: 8.5pt;
+        }
+
+        .interet-highlight {
+            font-weight: 600;
+        }
+
+        /* CONTENU PRINCIPAL */
+        .main-content {
+            padding: 25px 20px;
+            background: white;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 15px;
+        }
+
+        .name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 26pt;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13pt;
+            font-weight: 600;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .accroche {
+            font-size: 10pt;
+            line-height: 1.5;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .accroche-highlight {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .qualites {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .qualite {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 9pt;
+            font-weight: 600;
+            color: var(--primary);
+            padding: 4px 12px;
+            border: 2px solid var(--accent);
+            border-radius: 20px;
+        }
+
+        /* Sections principales */
+        .section {
+            margin-bottom: 18px;
+        }
+
+        .section h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12pt;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        /* Expériences */
+        .experience-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .experience-item:last-child {
+            border-bottom: none;
+        }
+
+        .exp-entreprise {
+            font-weight: 700;
+            font-size: 10pt;
+            color: var(--primary);
+        }
+
+        .exp-poste {
+            font-size: 9.5pt;
+            font-style: italic;
+        }
+
+        .exp-dates {
+            font-size: 9pt;
+            color: var(--primary-light);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* Compétences */
+        .competences-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .competence-item {
+            font-size: 9pt;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .competence-item::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* Zone personnalisable mise en évidence */
+        .personalisable {
+            /* Cette classe marque les zones qui seront adaptées */
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .cv-container {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cv-container">
+        <!-- SIDEBAR GAUCHE -->
+        <aside class="sidebar">
+            <!-- Photo -->
+            <div class="photo-container">
+                <img src="{{photo_url}}" alt="Photo" class="photo" onerror="this.style.display='none'">
+            </div>
+
+            <!-- Contact -->
+            <h2>Contact</h2>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <span class="contact-icon">📧</span>
+                    <span class="contact-text">{{email}}</span>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📱</span>
+                    <span class="contact-text">{{telephone}}</span>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">🔗</span>
+                    <span class="contact-text">LinkedIn: {{linkedin}}</span>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📍</span>
+                    <span class="contact-text">{{localisation}}</span>
+                </div>
+            </div>
+
+            <!-- Formation -->
+            <h2>Formation</h2>
+            {{#formations}}
+            <div class="formation-item">
+                <div class="formation-dates">{{dates}}</div>
+                <div class="formation-titre">{{titre}}</div>
+                <div class="formation-lieu">{{etablissement}}</div>
+            </div>
+            {{/formations}}
+
+            <!-- Stages -->
+            <h2>Stages CIP</h2>
+            {{#stages}}
+            <div class="stage-item">
+                <div class="stage-dates">{{dates}}</div>
+                <div class="stage-lieu">{{lieu}}</div>
+                <div class="stage-mission">{{mission}}</div>
+            </div>
+            {{/stages}}
+
+            <!-- Bénévolat -->
+            <h2>Bénévolat</h2>
+            {{#benevolat}}
+            <div class="benevolat-item">
+                <div class="benevolat-event">{{evenement}}</div>
+                <div>{{role}}</div>
+            </div>
+            {{/benevolat}}
+
+            <!-- Centres d'intérêt -->
+            <h2>Centres d'intérêt</h2>
+            {{#interets}}
+            <div class="interet-item">
+                <span class="interet-highlight">{{titre}}</span>
+                {{#detail}} – {{detail}}{{/detail}}
+            </div>
+            {{/interets}}
+        </aside>
+
+        <!-- CONTENU PRINCIPAL -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h1 class="name">{{nom}}</h1>
+                <div class="title">{{titre_professionnel}}</div>
+                <p class="accroche personalisable">
+                    {{accroche}}
+                </p>
+                <div class="qualites personalisable">
+                    {{#qualites}}
+                    <span class="qualite">{{.}}</span>
+                    {{/qualites}}
+                </div>
+            </header>
+
+            <!-- Domaines de compétences -->
+            <section class="section">
+                <h2>Domaines de compétences</h2>
+                <div class="competences-grid personalisable">
+                    {{#competences}}
+                    <div class="competence-item">{{.}}</div>
+                    {{/competences}}
+                </div>
+            </section>
+
+            <!-- Parcours professionnel -->
+            <section class="section">
+                <h2>Parcours professionnel</h2>
+                {{#experiences}}
+                <div class="experience-item">
+                    <div>
+                        <div class="exp-entreprise">{{entreprise}}</div>
+                        <div class="exp-poste">{{poste}}</div>
+                    </div>
+                    <div class="exp-dates">{{dates}}</div>
+                </div>
+                {{/experiences}}
+            </section>
+
+            <!-- Section Communication/Événementiel (optionnelle) -->
+            {{#section_communication}}
+            <section class="section">
+                <h2>Communication / Événementiel</h2>
+                <div class="competences-grid">
+                    {{#competences_com}}
+                    <div class="competence-item">{{.}}</div>
+                    {{/competences_com}}
+                </div>
+            </section>
+            {{/section_communication}}
+        </main>
+    </div>
+</body>
+</html>
+

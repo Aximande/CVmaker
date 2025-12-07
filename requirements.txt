@@ -1,0 +1,27 @@
+# Assistant Recherche d'Emploi - Valérie Jasica
+# Python 3.9+
+
+# Framework web
+streamlit>=1.28.0
+
+# LLM
+anthropic
+
+# PDF parsing
+PyPDF2>=3.0.0
+pdfplumber>=0.10.0
+
+# Génération de documents
+python-docx>=1.1.0
+reportlab>=4.0.0
+weasyprint>=60.0  # Pour génération CV HTML → PDF (nécessite cairo/pango)
+
+# Utilitaires
+python-dotenv>=1.0.0
+
+# Export
+markdown>=3.5.0
+
+# Base de données (persistance)
+supabase>=2.0.0
+
